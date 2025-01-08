@@ -3,7 +3,6 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 #from app.schemas import Quiz, AnswerSubmit, AnswerWithFeedback
 from typing import List, Optional
-from app.services import quiz_service
 
 router = APIRouter(prefix="/api/quizzes", tags=["quizzes"])
 

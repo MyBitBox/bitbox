@@ -30,13 +30,6 @@ project_root/
 │   │   │   ├── quiz.py
 │   │   │   ├── content_type.py
 │   │   │   ├── subject.py
-│   │   ├── services/   # 비즈니스 로직 서비스
-│   │   │   ├── __init__.py
-│   │   │   ├── auth_service.py
-│   │   │   ├── quiz_service.py
-│   │   │   ├── content_type_service.py # 콘텐츠 유형 서비스
-│   │   │   ├── subject_service.py # 주제 서비스
-│   │   │   ├── user_service.py
 │   │   ├── tests/     # 테스트 코드
 │   │   │   ├── __init__.py
 │   │   │   ├── test_api.py
