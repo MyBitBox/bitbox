@@ -50,17 +50,9 @@ source venv/bin/activate # macOS/Linux
 pip install -r backend/requirements.txt
 ```
 
-#### 2.2. 데이터베이스 마이그레이션
-
-```bash
-cd backend
-alembic upgrade head
-```
-
-#### 2.3. 백엔드 서버 실행
+#### 2.2. 백엔드 서버 실행
 
 ```
-cd backend
 uvicorn app.main:app --reload
 ```
 
