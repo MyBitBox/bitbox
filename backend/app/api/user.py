@@ -1,15 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app.core.database import get_db
-
-# from app.schemas import UserSignup, UserLogin, Token, User
+from app.schemas.user import UserResponse
+from app.core.utils import get_current_user
 
 router = APIRouter(prefix="/api/users", tags=["users"])
 
 
-@router.get("/me")
-def get_me():
-    return {"message": "get me"}
+@router.get("/me", response_model=UserResponse)
+def get_me(current_user: UserResponse = Depends(get_current_user)):
+    return current_user
 
 
 @router.put("/me")
