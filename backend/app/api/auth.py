@@ -70,6 +70,16 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
     return Token(access_token=access_token, token_type="bearer")
 
 
-@router.post("/logout")
+@router.post(
+    "/logout",
+    responses={
+        200: {
+            "description": "Successfully logged out",
+            "content": {
+                "application/json": {"example": {"detail": "Successfully logged out"}}
+            },
+        }
+    },
+)
 def logout():
-    return {"message": "logout"}
+    return {"detail": "Successfully logged out"}
