@@ -31,16 +31,18 @@
 ### 1. Git 저장소 복제
 
 ```bash
-git clone <저장소_URL>
-cd <프로젝트_디렉토리>
+git clone git@github.com:MyBitBox/bitbox.git
+cd bitbox
 ```
 
 ### 2. 백엔드 환경 설정
 #### 2.1. Python 환경 설정
 
 ```bash
+cd backend
+
 # 가상 환경 생성 (선택 사항)
-python3 -m venv venv
+python -m venv venv
 source venv/bin/activate # macOS/Linux
 # venv\Scripts\activate  # Windows
 
