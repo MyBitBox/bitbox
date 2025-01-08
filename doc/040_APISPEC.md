@@ -184,7 +184,7 @@
     *   **응답 헤더:** `Content-Type: application/json`
     *   **응답 바디:**
         ```json
-       {
+        {
             "id": 1,
             "title": "파이썬 변수 선언",
             "content": "파이썬에서 변수를 선언하는 방법은?",
