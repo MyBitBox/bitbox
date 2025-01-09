@@ -47,7 +47,7 @@ source venv/bin/activate # macOS/Linux
 # venv\Scripts\activate  # Windows
 
 # 패키지 설치
-pip install -r backend/requirements.txt
+pip install -r requirements.txt
 
 # .env 파일 생성
 touch .env
