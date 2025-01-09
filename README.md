@@ -48,6 +48,12 @@ source venv/bin/activate # macOS/Linux
 
 # 패키지 설치
 pip install -r backend/requirements.txt
+
+# .env 파일 생성
+touch .env
+
+# .env 파일에 SECRET_KEY
+SECRET_KEY=<secret_key>
 ```
 
 #### 2.2. 백엔드 서버 실행
