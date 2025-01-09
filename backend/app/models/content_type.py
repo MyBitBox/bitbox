@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy.orm import relationship
 from app.core.database import Base
 from sqlalchemy.sql import func
 
@@ -13,3 +14,5 @@ class ContentType(Base):
     updated_at = Column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
+
+    subjects = relationship("Subject", back_populates="content_type")
