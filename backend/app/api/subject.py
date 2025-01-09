@@ -6,10 +6,12 @@ from app.schemas import Subject, SubjectCreate
 
 router = APIRouter(prefix="/api/subjects", tags=["subjects"])
 
+
 @router.get("/", response_model=list[Subject])
 def get_subjects(db: Session = Depends(get_db)):
     subjects = db.query(SubjectModel).all()
     return subjects
+
 
 @router.post("/", response_model=Subject)
 def create_subject(subject: SubjectCreate, db: Session = Depends(get_db)):
@@ -19,6 +21,7 @@ def create_subject(subject: SubjectCreate, db: Session = Depends(get_db)):
     db.refresh(db_subject)
     return db_subject
 
+
 @router.get("/{subject_id}", response_model=Subject)
 def read_subject(subject_id: int, db: Session = Depends(get_db)):
     db_subject = db.query(SubjectModel).filter(SubjectModel.id == subject_id).first()
@@ -26,8 +29,11 @@ def read_subject(subject_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Subject not found")
     return db_subject
 
+
 @router.put("/{subject_id}", response_model=Subject)
-def update_subject(subject_id: int, subject: SubjectCreate, db: Session = Depends(get_db)):
+def update_subject(
+    subject_id: int, subject: SubjectCreate, db: Session = Depends(get_db)
+):
     db_subject = db.query(SubjectModel).filter(SubjectModel.id == subject_id).first()
     if db_subject is None:
         raise HTTPException(status_code=404, detail="Subject not found")
@@ -36,6 +42,7 @@ def update_subject(subject_id: int, subject: SubjectCreate, db: Session = Depend
     db.commit()
     db.refresh(db_subject)
     return db_subject
+
 
 @router.delete("/{subject_id}", response_model=Subject)
 def delete_subject(subject_id: int, db: Session = Depends(get_db)):
