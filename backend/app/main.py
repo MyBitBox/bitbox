@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from app.api import auth, quiz, user, content_type, subject
 from fastapi.middleware.cors import CORSMiddleware
+from app.core.database import init_db
 
 app = FastAPI()
 
@@ -11,6 +12,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+init_db()
 
 app.include_router(auth.router)
 app.include_router(quiz.router)
