@@ -1,14 +1,67 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Service Landing Page</title>
+    <title>BitBox - 개발자 학습 플랫폼</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
+
 <body>
-    <h1>Welcome to BitBox</h1>
-    <p>
-        <a href="pages/content_type_list.html">Go to Content Types</a>
-    </p>
+    <header class="header">
+        <nav class="nav-container">
+            <div class="logo">
+                <h1>BitBox</h1>
+            </div>
+            <div class="nav-links">
+                <a href="/frontend/pages/login.html" class="btn btn-outline">로그인</a>
+                <a href="/frontend/pages/signup.html" class="btn btn-primary">회원가입</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="main">
+        <section class="hero">
+            <div class="hero-content">
+                <h1>프로그래밍 학습의 새로운 시작</h1>
+                <p>객관식 퀴즈로 시작하는 쉽고 재미있는 프로그래밍 학습</p>
+                <div class="cta-buttons">
+                    <a href="/frontend/pages/content_type_list.html" class="btn btn-primary btn-large">학습 시작하기</a>
+                    <a href="#features" class="btn btn-outline btn-large">자세히 알아보기</a>
+                </div>
+            </div>
+        </section>
+
+        <section id="features" class="features">
+            <h2>BitBox의 특징</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📚</div>
+                    <h3>객관식 퀴즈</h3>
+                    <p>Python, FastAPI 등 다양한 주제의 퀴즈로 학습하세요</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🤖</div>
+                    <h3>AI 피드백</h3>
+                    <p>AI가 제공하는 상세한 피드백으로 더 깊이 이해하세요</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📈</div>
+                    <h3>학습 진행도</h3>
+                    <p>나의 학습 상태를 한눈에 확인하세요</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <p>&copy; 2024 BitBox. All rights reserved.</p>
+        </div>
+    </footer>
 </body>
+
 </html>
