@@ -9,8 +9,12 @@ router = APIRouter(prefix="/api/subjects", tags=["subjects"])
 
 
 @router.get("/", response_model=List[SubjectResponse])
-def get_subjects(db: Session = Depends(get_db)):
-    subjects = db.query(SubjectModel).all()
+def get_subjects(content_type_id: int, db: Session = Depends(get_db)):
+    subjects = (
+        db.query(SubjectModel)
+        .filter(SubjectModel.content_type_id == content_type_id)
+        .all()
+    )
     return subjects
 
 

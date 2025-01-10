@@ -9,8 +9,8 @@ router = APIRouter(prefix="/api/quizzes", tags=["quizzes"])
 
 
 @router.get("/", response_model=List[QuizResponse])
-def get_quizzes(db: Session = Depends(get_db)):
-    return db.query(Quiz).all()
+def get_quizzes(subject_id: int, db: Session = Depends(get_db)):
+    return db.query(Quiz).filter(Quiz.subject_id == subject_id).all()
 
 
 @router.post(

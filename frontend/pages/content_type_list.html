@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Content Type List</title>
+</head>
+<body>
+    <div id="content"></div>
+    <script>
+        fetch('http://localhost:8000/api/content_types')
+            .then(response => response.json())
+            .then(data => {
+                const contentDiv = document.getElementById('content');
+                data.forEach(item => {
+                    const p = document.createElement('p');
+                    const a = document.createElement('a');
+                    a.href = `subject_list.html?content_type_id=${item.id}`;
+                    a.textContent = `Id: ${item.id}, Name: ${item.name}, Description: ${item.description}`;
+                    p.appendChild(a);
+                    contentDiv.appendChild(p);
+                });
+            })
+            .catch(error => console.log(error));
+    </script>
+</body>
+</html>

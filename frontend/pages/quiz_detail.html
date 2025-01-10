@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Detail</title>
+</head>
+<body>
+    <div id="content"></div>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const quizId = urlParams.get('quiz_id');
+
+        fetch(`http://localhost:8000/api/quizzes/${quizId}`)
+            .then(response => response.json())
+            .then(data => {
+                const contentDiv = document.getElementById('content');
+
+                // 퀴즈 제목과 내용을 표시합니다.
+                const title = document.createElement('h2');
+                title.textContent = data.title;
+                contentDiv.appendChild(title);
+
+                const content = document.createElement('p');
+                content.textContent = data.content;
+                contentDiv.appendChild(content);
+
+                // 선택지 목록을 표시합니다.
+                const optionsList = document.createElement('ul');
+                data.options.forEach(option => {
+                    const li = document.createElement('li');
+                    li.textContent = option.content;
+                    optionsList.appendChild(li);
+                });
+                contentDiv.appendChild(optionsList);
+            })
+            .catch(error => console.log(error));
+    </script>
+</body>
+</html>

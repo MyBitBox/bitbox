@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz</title>
+</head>
+<body>
+    <div id="content"></div>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const subjectId = urlParams.get('subject_id');
+
+        fetch(`http://localhost:8000/api/quizzes?subject_id=${subjectId}`)
+            .then(response => response.json())
+            .then(data => {
+                const contentDiv = document.getElementById('content');
+                data.forEach(item => {
+                    const p = document.createElement('p');
+                    const a = document.createElement('a');
+                    a.href = `quiz_detail.html?quiz_id=${item.id}`;
+                    a.textContent = `Id: ${item.id}, Title: ${item.title}, Content: ${item.content}`;
+                    p.appendChild(a);
+                    contentDiv.appendChild(p);
+                });
+            })
+            .catch(error => console.log(error));
+    </script>
+</body>
+</html>
