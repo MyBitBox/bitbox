@@ -13,9 +13,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 데이터베이스 테이블 생성
-Base.metadata.create_all(bind=engine)
-
 init_db()
 
 app.include_router(auth.router)
