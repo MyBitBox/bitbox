@@ -9,6 +9,7 @@ class Quiz(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     subject_id = Column(Integer, ForeignKey("subjects.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     title = Column(String(255), nullable=False)
     content = Column(Text, nullable=False)
     options = Column(Text, nullable=False)
@@ -19,3 +20,5 @@ class Quiz(Base):
     )
 
     subject = relationship("Subject", back_populates="quizzes")
+    user = relationship("User", back_populates="quizzes")
+    answers = relationship("Answer", back_populates="quiz")

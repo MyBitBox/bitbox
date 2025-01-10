@@ -17,4 +17,5 @@ class User(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
 
-    # answers = relationship('Answer', back_populates='user')
+    quizzes = relationship("Quiz", back_populates="user")
+    answers = relationship("Answer", back_populates="user")
