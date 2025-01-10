@@ -459,3 +459,242 @@ body {
     font-size: 0.875rem;
     text-align: center;
 }
+
+
+/* 프로필 페이지 스타일 */
+
+.profile-section {
+    padding: 6rem 2rem;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.profile-card {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.profile-card h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.profile-content {
+    margin-top: 1rem;
+}
+
+.profile-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.info-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.info-group label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.info-group p {
+    font-size: 1rem;
+    color: var(--text-color);
+    padding: 0.75rem;
+    background-color: var(--background-color);
+    border-radius: 0.5rem;
+}
+
+.loading {
+    text-align: center;
+    color: var(--text-secondary);
+    padding: 2rem;
+}
+
+
+/* 대시보드 페이지 스타일 */
+
+.dashboard-section {
+    padding: 6rem 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.dashboard-header {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.dashboard-header h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.last-update {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+}
+
+.dashboard-card {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-card h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    color: var(--text-color);
+}
+
+
+/* 학습 개요 카드 */
+
+.summary-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 1rem;
+    background-color: var(--background-color);
+    border-radius: 0.5rem;
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+
+/* 현재 학습 중인 주제 카드 */
+
+.topic-item {
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.topic-item:last-child {
+    border-bottom: none;
+}
+
+.topic-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.topic-info h4 {
+    font-weight: 500;
+}
+
+.topic-info p {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+
+/* 성과 그래프 카드 */
+
+.performance-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.progress-bar-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.875rem;
+}
+
+.progress-bar {
+    height: 0.5rem;
+    background-color: var(--background-color);
+    border-radius: 1rem;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+.progress-fill.correct {
+    background-color: #10B981;
+}
+
+.progress-fill.incorrect {
+    background-color: #EF4444;
+}
+
+
+/* AI 피드백 카드 */
+
+.feedback-message {
+    padding: 1.5rem;
+    background-color: var(--background-color);
+    border-radius: 0.5rem;
+    line-height: 1.6;
+}
+
+
+/* 반응형 디자인 */
+
+@media (max-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+    .summary-stats {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+/* 로딩 및 에러 상태 */
+
+.loading {
+    text-align: center;
+    color: var(--text-secondary);
+    padding: 2rem;
+}
+
+.no-data {
+    text-align: center;
+    color: var(--text-secondary);
+    padding: 1rem;
+}
