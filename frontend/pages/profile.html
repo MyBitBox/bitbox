@@ -43,16 +43,15 @@
     </footer>
 
     <script>
-        // 토큰이 없으면 로그인 페이지로 리다이렉트
-        const token = localStorage.getItem('token');
-        if (!token) {
-            window.location.href = 'login.html';
-        }
-
-        // 프로필 정보 로드
         async function loadProfile() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+
             try {
-                const response = await fetch('http://localhost:8000/api/user/me', {
+                const response = await fetch('http://localhost:8000/api/users/me', {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -91,14 +90,8 @@
             }
         }
 
-        // 로그아웃 처리
-        document.getElementById('logoutBtn').addEventListener('click', function() {
-            localStorage.removeItem('token');
-            window.location.href = '../index.html';
-        });
-
-        // 페이지 로드 시 프로필 정보 불러오기
-        loadProfile();
+        // DOM이 로드된 후 프로필 정보 불러오기
+        document.addEventListener('DOMContentLoaded', loadProfile);
     </script>
 </body>
 
