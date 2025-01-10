@@ -1,27 +1,104 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Content Type List</title>
+    <title>학습 유형 선택 - BitBox</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
+
 <body>
-    <div id="content"></div>
+    <header class="header">
+        <nav class="nav-container">
+            <div class="logo">
+                <a href="../index.html">
+                    <h1>BitBox</h1>
+                </a>
+            </div>
+            <div class="nav-links">
+                <a href="login.html" class="btn btn-outline">로그인</a>
+                <a href="signup.html" class="btn btn-primary">회원가입</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="main">
+        <section class="content-type-section">
+            <div class="section-header">
+                <h2>학습 유형 선택</h2>
+                <p>원하는 학습 유형을 선택하여 시작하세요</p>
+            </div>
+            <div id="contentTypeGrid" class="content-type-grid">
+                <!-- 여기에 동적으로 카드가 추가됩니다 -->
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <p>&copy; 2024 BitBox. All rights reserved.</p>
+        </div>
+    </footer>
+
     <script>
+        // 콘텐츠 타입별 아이콘 매핑
+        const typeIcons = {
+            'quiz': '📝',
+            'codingtest': '💻',
+            'interview': '🎯'
+        };
+
+        // 콘텐츠 타입별 한글 이름 매핑
+        const typeNames = {
+            'quiz': '객관식 퀴즈',
+            'codingtest': '코딩 테스트',
+            'interview': '면접 준비'
+        };
+
+        // 콘텐츠 타입별 설명 매핑
+        const typeDescriptions = {
+            'quiz': 'Python, FastAPI 등 다양한 주제의 퀴즈를 풀어보세요',
+            'codingtest': '실전과 같은 환경에서 코딩 테스트를 연습해보세요',
+            'interview': '실제 면접에서 자주 나오는 질문들을 연습해보세요'
+        };
+
+        // API 호출 및 카드 생성
         fetch('http://localhost:8000/api/content_types')
             .then(response => response.json())
             .then(data => {
-                const contentDiv = document.getElementById('content');
-                data.forEach(item => {
-                    const p = document.createElement('p');
-                    const a = document.createElement('a');
-                    a.href = `subject_list.html?content_type_id=${item.id}`;
-                    a.textContent = `Id: ${item.id}, Name: ${item.name}, Description: ${item.description}`;
-                    p.appendChild(a);
-                    contentDiv.appendChild(p);
+                const grid = document.getElementById('contentTypeGrid');
+
+                data.forEach(type => {
+                    const card = document.createElement('a');
+                    // quiz 타입만 활성화, 나머지는 disabled 처리
+                    const isEnabled = type.name === 'quiz';
+                    card.className = `content-type-card ${!isEnabled ? 'disabled' : ''}`;
+                    card.href = isEnabled ? `subject_list.html?content_type_id=${type.id}` : '#';
+
+                    card.innerHTML = `
+                        <div class="card-icon">${typeIcons[type.name] || '📦'}</div>
+                        <h3>${typeNames[type.name] || type.name}</h3>
+                        <p>${typeDescriptions[type.name] || type.description}</p>
+                        <span class="card-badge ${!isEnabled ? 'coming-soon' : ''}">${isEnabled ? '현재 이용 가능' : 'Coming Soon'}</span>
+                    `;
+
+                    grid.appendChild(card);
                 });
             })
-            .catch(error => console.log(error));
+            .catch(error => {
+                console.error('Error fetching content types:', error);
+                // 에러 발생 시 사용자에게 알림
+                const grid = document.getElementById('contentTypeGrid');
+                grid.innerHTML = `
+                    <div class="error-message">
+                        <p>콘텐츠를 불러오는 중 문제가 발생했습니다.</p>
+                        <p>잠시 후 다시 시도해주세요.</p>
+                    </div>
+                `;
+            });
     </script>
 </body>
+
 </html>

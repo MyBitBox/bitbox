@@ -159,7 +159,106 @@ body {
 }
 
 
-/* 반응형 디자인 */
+/* Content Type 페이지 스타일 */
+
+.content-type-section {
+    padding: 6rem 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.section-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.section-header h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.section-header p {
+    font-size: 1.25rem;
+    color: var(--text-secondary);
+}
+
+.content-type-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+}
+
+.content-type-card {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 1rem;
+    text-decoration: none;
+    color: var(--text-color);
+    transition: all 0.3s ease;
+    border: 1px solid var(--border-color);
+    position: relative;
+    overflow: hidden;
+}
+
+.content-type-card:hover:not(.disabled) {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.card-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.content-type-card h3 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.content-type-card p {
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+.card-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 1rem;
+    font-size: 0.875rem;
+}
+
+.card-badge.coming-soon {
+    background-color: var(--text-secondary);
+}
+
+.content-type-card.disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.error-message {
+    text-align: center;
+    padding: 2rem;
+    background-color: white;
+    border-radius: 0.5rem;
+    border: 1px solid var(--border-color);
+    grid-column: 1 / -1;
+}
+
+.error-message p {
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.error-message p:last-child {
+    margin-bottom: 0;
+}
+
+
+/* 반응형 디자인 추가 */
 
 @media (max-width: 768px) {
     .hero h1 {
@@ -173,5 +272,14 @@ body {
     }
     .features-grid {
         grid-template-columns: 1fr;
+    }
+    .content-type-section {
+        padding: 4rem 1rem;
+    }
+    .section-header h2 {
+        font-size: 2rem;
+    }
+    .section-header p {
+        font-size: 1rem;
     }
 }
