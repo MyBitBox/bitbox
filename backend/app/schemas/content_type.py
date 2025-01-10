@@ -1,9 +1,10 @@
 from pydantic import BaseModel
+from typing import Optional
 
 
 class ContentTypeBase(BaseModel):
     name: str
-    description: str | None = None
+    description: Optional[str] = None
 
 
 class ContentTypeCreate(ContentTypeBase):

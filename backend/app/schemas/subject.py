@@ -1,6 +1,5 @@
 from pydantic import BaseModel
 from typing import Optional
-from datetime import datetime
 
 
 class SubjectBase(BaseModel):
@@ -13,10 +12,8 @@ class SubjectCreate(SubjectBase):
     pass
 
 
-class Subject(SubjectBase):
+class SubjectResponse(SubjectBase):
     id: int
-    created_at: datetime
-    updated_at: datetime
 
     class Config:
-        orm_mode: True
+        from_attributes: True

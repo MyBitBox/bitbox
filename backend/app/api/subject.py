@@ -1,19 +1,20 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from typing import List
 from app.core.database import get_db
 from app.models.subject import Subject as SubjectModel
-from app.schemas import Subject, SubjectCreate
+from app.schemas.subject import SubjectResponse, SubjectCreate
 
 router = APIRouter(prefix="/api/subjects", tags=["subjects"])
 
 
-@router.get("/", response_model=list[Subject])
+@router.get("/", response_model=List[SubjectResponse])
 def get_subjects(db: Session = Depends(get_db)):
     subjects = db.query(SubjectModel).all()
     return subjects
 
 
-@router.post("/", response_model=Subject)
+@router.post("/", response_model=SubjectResponse)
 def create_subject(subject: SubjectCreate, db: Session = Depends(get_db)):
     db_subject = SubjectModel(**subject.dict())
     db.add(db_subject)
@@ -22,7 +23,7 @@ def create_subject(subject: SubjectCreate, db: Session = Depends(get_db)):
     return db_subject
 
 
-@router.get("/{subject_id}", response_model=Subject)
+@router.get("/{subject_id}", response_model=SubjectResponse)
 def read_subject(subject_id: int, db: Session = Depends(get_db)):
     db_subject = db.query(SubjectModel).filter(SubjectModel.id == subject_id).first()
     if db_subject is None:
@@ -30,7 +31,7 @@ def read_subject(subject_id: int, db: Session = Depends(get_db)):
     return db_subject
 
 
-@router.put("/{subject_id}", response_model=Subject)
+@router.put("/{subject_id}", response_model=SubjectResponse)
 def update_subject(
     subject_id: int, subject: SubjectCreate, db: Session = Depends(get_db)
 ):
@@ -44,7 +45,7 @@ def update_subject(
     return db_subject
 
 
-@router.delete("/{subject_id}", response_model=Subject)
+@router.delete("/{subject_id}", response_model=SubjectResponse)
 def delete_subject(subject_id: int, db: Session = Depends(get_db)):
     db_subject = db.query(SubjectModel).filter(SubjectModel.id == subject_id).first()
     if db_subject is None:

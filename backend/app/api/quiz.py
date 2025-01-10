@@ -36,8 +36,9 @@ def create_quiz(quiz: QuizCreate, db: Session = Depends(get_db)):
     new_quiz = Quiz(
         title=quiz.title,
         content=quiz.content,
-        options=quiz.options,
+        options=[option.model_dump() for option in quiz.options],
         subject_id=quiz.subject_id,
+        correct_option_id=quiz.correct_option_id,
     )
     db.add(new_quiz)
     db.commit()

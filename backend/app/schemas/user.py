@@ -1,4 +1,5 @@
 from pydantic import BaseModel, EmailStr
+from typing import Optional
 from datetime import datetime
 
 
@@ -22,8 +23,7 @@ class UserResponse(BaseModel):
     email: EmailStr
     nickname: str
     created_at: datetime
-    # TODO: User DB Model에 updated_at이 업데이트되는 시점 파악 후 수정
-    updated_at: datetime | None = None
+    updated_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
@@ -35,4 +35,4 @@ class Token(BaseModel):
 
 
 class TokenData(BaseModel):
-    email: str | None = None
+    email: Optional[str] = None
