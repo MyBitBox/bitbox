@@ -1,30 +1,123 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz</title>
+    <title>퀴즈 - BitBox</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
+
 <body>
-    <div id="content"></div>
+    <header class="header">
+        <nav class="nav-container">
+            <div class="logo">
+                <a href="../index.html">
+                    <h1>BitBox</h1>
+                </a>
+            </div>
+            <div class="nav-links">
+                <a href="login.html" class="btn btn-outline">로그인</a>
+                <a href="signup.html" class="btn btn-primary">회원가입</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="main">
+        <section class="quiz-section">
+            <div id="quizContainer">
+                <!-- 여기에 동적으로 퀴즈가 추가됩니다 -->
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <p>&copy; 2024 BitBox. All rights reserved.</p>
+        </div>
+    </footer>
+
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const subjectId = urlParams.get('subject_id');
+        let currentQuizIndex = 0;
+        let quizzes = [];
 
+        function displayQuiz(quiz) {
+            const container = document.getElementById('quizContainer');
+            container.innerHTML = `
+                <div class="quiz-card">
+                    <div class="quiz-header">
+                        <div class="quiz-progress">
+                            ${currentQuizIndex + 1} / ${quizzes.length}
+                        </div>
+                        <h2 class="quiz-title">${quiz.title}</h2>
+                    </div>
+                    <div class="quiz-content">
+                        <pre><code>${quiz.content}</code></pre>
+                    </div>
+                    <div class="quiz-options">
+                        ${quiz.options.map((option, index) => `
+                            <button class="quiz-option" data-option-id="${option.id}">
+                                <span class="option-label">${String.fromCharCode(65 + index)}.</span>
+                                <pre><code>${option.content}</code></pre>
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            // 옵션 클릭 이벤트 추가
+            document.querySelectorAll('.quiz-option').forEach(button => {
+                button.addEventListener('click', function() {
+                    const optionId = this.dataset.optionId;
+                    submitAnswer(quiz.id, parseInt(optionId));
+                });
+            });
+        }
+
+        function submitAnswer(quizId, optionId) {
+            // TODO: API를 통해 답변 제출 구현
+            console.log(`Quiz ID: ${quizId}, Selected Option: ${optionId}`);
+            
+            // 다음 퀴즈로 이동
+            if (currentQuizIndex < quizzes.length - 1) {
+                currentQuizIndex++;
+                displayQuiz(quizzes[currentQuizIndex]);
+            } else {
+                // 마지막 퀴즈인 경우 결과 페이지로 이동
+                alert('모든 퀴즈를 완료했습니다!');
+                // TODO: 결과 페이지로 이동
+            }
+        }
+
+        // 퀴즈 데이터 로드
         fetch(`http://localhost:8000/api/quizzes?subject_id=${subjectId}`)
             .then(response => response.json())
             .then(data => {
-                const contentDiv = document.getElementById('content');
-                data.forEach(item => {
-                    const p = document.createElement('p');
-                    const a = document.createElement('a');
-                    a.href = `quiz_detail.html?quiz_id=${item.id}`;
-                    a.textContent = `Id: ${item.id}, Title: ${item.title}, Content: ${item.content}`;
-                    p.appendChild(a);
-                    contentDiv.appendChild(p);
-                });
+                quizzes = data;
+                if (quizzes.length > 0) {
+                    displayQuiz(quizzes[0]);
+                } else {
+                    document.getElementById('quizContainer').innerHTML = `
+                        <div class="error-message">
+                            <p>아직 퀴즈가 준비되지 않았습니다.</p>
+                            <p>다른 주제를 선택해주세요.</p>
+                        </div>
+                    `;
+                }
             })
-            .catch(error => console.log(error));
+            .catch(error => {
+                console.error('Error fetching quizzes:', error);
+                document.getElementById('quizContainer').innerHTML = `
+                    <div class="error-message">
+                        <p>퀴즈를 불러오는 중 문제가 발생했습니다.</p>
+                        <p>잠시 후 다시 시도해주세요.</p>
+                    </div>
+                `;
+            });
     </script>
 </body>
+
 </html>
