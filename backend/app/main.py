@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from app.api import auth, quiz, user, content_type, subject
 from fastapi.middleware.cors import CORSMiddleware
-from app.core.database import init_db
+from app.core.database import init_db, engine, Base
 
 app = FastAPI()
 
@@ -12,6 +12,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 데이터베이스 테이블 생성
+Base.metadata.create_all(bind=engine)
 
 init_db()
 

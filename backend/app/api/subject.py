@@ -1,12 +1,54 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.core.database import get_db
-
-# from app.schemas import UserSignup, UserLogin, Token, User
+from app.models.subject import Subject as SubjectModel
+from app.schemas import Subject, SubjectCreate
 
 router = APIRouter(prefix="/api/subjects", tags=["subjects"])
 
 
-@router.get("/")
-def get_subjects():
-    return {"message": "get subjects"}
+@router.get("/", response_model=list[Subject])
+def get_subjects(db: Session = Depends(get_db)):
+    subjects = db.query(SubjectModel).all()
+    return subjects
+
+
+@router.post("/", response_model=Subject)
+def create_subject(subject: SubjectCreate, db: Session = Depends(get_db)):
+    db_subject = SubjectModel(**subject.dict())
+    db.add(db_subject)
+    db.commit()
+    db.refresh(db_subject)
+    return db_subject
+
+
+@router.get("/{subject_id}", response_model=Subject)
+def read_subject(subject_id: int, db: Session = Depends(get_db)):
+    db_subject = db.query(SubjectModel).filter(SubjectModel.id == subject_id).first()
+    if db_subject is None:
+        raise HTTPException(status_code=404, detail="Subject not found")
+    return db_subject
+
+
+@router.put("/{subject_id}", response_model=Subject)
+def update_subject(
+    subject_id: int, subject: SubjectCreate, db: Session = Depends(get_db)
+):
+    db_subject = db.query(SubjectModel).filter(SubjectModel.id == subject_id).first()
+    if db_subject is None:
+        raise HTTPException(status_code=404, detail="Subject not found")
+    for key, value in subject.dict().items():
+        setattr(db_subject, key, value)
+    db.commit()
+    db.refresh(db_subject)
+    return db_subject
+
+
+@router.delete("/{subject_id}", response_model=Subject)
+def delete_subject(subject_id: int, db: Session = Depends(get_db)):
+    db_subject = db.query(SubjectModel).filter(SubjectModel.id == subject_id).first()
+    if db_subject is None:
+        raise HTTPException(status_code=404, detail="Subject not found")
+    db.delete(db_subject)
+    db.commit()
+    return db_subject
