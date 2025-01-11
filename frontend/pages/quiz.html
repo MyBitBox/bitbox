@@ -8,6 +8,10 @@
     <link rel="stylesheet" href="../css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="../js/auth.js" defer></script>
+    <!-- Toast UI Editor CSS -->
+    <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css" />
+    <!-- Toast UI Editor 코어 -->
+    <script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
 </head>
 
 <body>
@@ -54,19 +58,25 @@
                         </div>
                         <h2 class="quiz-title">${quiz.title}</h2>
                     </div>
-                    <div class="quiz-content">
-                        <pre><code>${quiz.content}</code></pre>
-                    </div>
+                    <div id="quizContent" class="quiz-content"></div>
                     <div class="quiz-options">
                         ${quiz.options.map((option, index) => `
                             <button class="quiz-option" data-option-id="${option.id}">
                                 <span class="option-label">${String.fromCharCode(65 + index)}.</span>
-                                <pre><code>${option.content}</code></pre>
+                                <pre class="option-content">${option.content}</pre>
                             </button>
                         `).join('')}
                     </div>
                 </div>
             `;
+
+            // 문제 내용만 Toast UI Viewer로 표시
+            new toastui.Editor.factory({
+                el: document.getElementById('quizContent'),
+                initialValue: quiz.content,
+                viewer: true,
+                height: 'auto'
+            });
 
             // 옵션 클릭 이벤트 추가
             document.querySelectorAll('.quiz-option').forEach(button => {
