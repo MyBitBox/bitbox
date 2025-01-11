@@ -44,11 +44,20 @@ function updateNavigation() {
 
 // auth.js에 추가
 function checkProtectedPage() {
-    const protectedPages = ['dashboard', 'profile'];
+    const protectedPages = [
+        'dashboard',
+        'profile',
+        'content_type_list',
+        'subject_list',
+        'quiz'
+    ];
     const currentPage = window.location.pathname.split('/').pop().split('.')[0];
 
     if (protectedPages.includes(currentPage) && !isLoggedIn()) {
+        // 현재 URL을 localStorage에 저장 (로그인 후 리다이렉트용)
+        localStorage.setItem('redirectUrl', window.location.href);
         window.location.href = '/frontend/pages/login.html';
+        return;
     }
 }
 

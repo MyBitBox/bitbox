@@ -80,8 +80,14 @@
                     localStorage.setItem('token', data.access_token);
                     // 네비게이션 메뉴 업데이트
                     updateNavigation();
-                    // 메인 페이지로 리다이렉트
-                    window.location.href = '../index.html';
+                    // 저장된 리다이렉트 URL이 있으면 해당 페이지로, 없으면 메인 페이지로
+                    const redirectUrl = localStorage.getItem('redirectUrl');
+                    if (redirectUrl) {
+                        localStorage.removeItem('redirectUrl');
+                        window.location.href = redirectUrl;
+                    } else {
+                        window.location.href = '../index.html';
+                    }
                 } else {
                     // 로그인 실패
                     const data = await response.json();
