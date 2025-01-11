@@ -51,21 +51,47 @@
         function displayQuiz(quiz) {
             const container = document.getElementById('quizContainer');
             container.innerHTML = `
-                <div class="quiz-card">
-                    <div class="quiz-header">
-                        <div class="quiz-progress">
-                            ${currentQuizIndex + 1} / ${quizzes.length}
+                <div class="quiz-layout">
+                    <div class="quiz-main">
+                        <div class="quiz-card">
+                            <div class="quiz-header">
+                                <div class="quiz-progress">
+                                    ${currentQuizIndex + 1} / ${quizzes.length}
+                                </div>
+                                <h2 class="quiz-title">${quiz.title}</h2>
+                            </div>
+                            <div id="quizContent" class="quiz-content"></div>
+                            <div class="quiz-options">
+                                ${quiz.options.map((option, index) => `
+                                    <button class="quiz-option" data-option-id="${option.id}">
+                                        <span class="option-label">${String.fromCharCode(65 + index)}.</span>
+                                        <pre class="option-content">${option.content}</pre>
+                                    </button>
+                                `).join('')}
+                            </div>
+                            <div class="quiz-navigation">
+                                <button id="nextQuizBtn" class="btn btn-primary">
+                                    다음 문제
+                                </button>
+                            </div>
                         </div>
-                        <h2 class="quiz-title">${quiz.title}</h2>
                     </div>
-                    <div id="quizContent" class="quiz-content"></div>
-                    <div class="quiz-options">
-                        ${quiz.options.map((option, index) => `
-                            <button class="quiz-option" data-option-id="${option.id}">
-                                <span class="option-label">${String.fromCharCode(65 + index)}.</span>
-                                <pre class="option-content">${option.content}</pre>
-                            </button>
-                        `).join('')}
+                    <div class="quiz-feedback-section">
+                        <div id="loadingIndicator" class="loading-indicator" style="display: none;">
+                            <div class="spinner"></div>
+                            <p>AI가 피드백을 생성하고 있습니다...</p>
+                        </div>
+                        <div id="feedbackPlaceholder" class="quiz-feedback-placeholder">
+                            <div class="icon">🤔</div>
+                            <div class="text">
+                                <p>문제를 읽고 답을 선택해주세요.</p>
+                                <p>AI가 상세한 피드백을 제공할 예정입니다.</p>
+                            </div>
+                        </div>
+                        <div id="quizFeedback" class="quiz-feedback">
+                            <h3>AI 피드백</h3>
+                            <div id="feedbackContent"></div>
+                        </div>
                     </div>
                 </div>
             `;
@@ -80,25 +106,74 @@
 
             // 옵션 클릭 이벤트 추가
             document.querySelectorAll('.quiz-option').forEach(button => {
-                button.addEventListener('click', function() {
+                button.addEventListener('click', async function() {
+                    if (this.classList.contains('disabled')) return;
+
                     const optionId = this.dataset.optionId;
-                    submitAnswer(quiz.id, parseInt(optionId));
+                    await submitAnswer(quiz.id, parseInt(optionId), this);
                 });
+            });
+
+            // 다음 문제 버튼 이벤트
+            document.getElementById('nextQuizBtn').addEventListener('click', () => {
+                if (currentQuizIndex < quizzes.length - 1) {
+                    currentQuizIndex++;
+                    displayQuiz(quizzes[currentQuizIndex]);
+                } else {
+                    alert('모든 문제를 완료했습니다!');
+                    window.location.href = 'subject_list.html';
+                }
             });
         }
 
-        function submitAnswer(quizId, optionId) {
-            // TODO: API를 통해 답변 제출 구현
-            console.log(`Quiz ID: ${quizId}, Selected Option: ${optionId}`);
+        async function submitAnswer(quizId, optionId, selectedButton) {
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const feedbackDiv = document.getElementById('quizFeedback');
+            const feedbackContent = document.getElementById('feedbackContent');
+            const placeholder = document.getElementById('feedbackPlaceholder');
             
-            // 다음 퀴즈로 이동
-            if (currentQuizIndex < quizzes.length - 1) {
-                currentQuizIndex++;
-                displayQuiz(quizzes[currentQuizIndex]);
-            } else {
-                // 마지막 퀴즈인 경우 결과 페이지로 이동
-                alert('모든 퀴즈를 완료했습니다!');
-                // TODO: 결과 페이지로 이동
+            // 로딩 표시 시작
+            loadingIndicator.style.display = 'flex';
+            feedbackDiv.style.display = 'none';
+            placeholder.style.display = 'none';
+
+            try {
+                const response = await fetch(`http://localhost:8000/api/quizzes/${quizId}/submit?option_id=${optionId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                const data = await response.json();
+                
+                // 모든 옵션 버튼 비활성화
+                document.querySelectorAll('.quiz-option').forEach(btn => {
+                    btn.classList.add('disabled');
+                });
+
+                // 선택한 옵션 표시
+                selectedButton.classList.add(data.is_correct ? 'correct' : 'incorrect');
+
+                // 피드백 표시
+                new toastui.Editor.factory({
+                    el: feedbackContent,
+                    initialValue: data.detail,
+                    viewer: true,
+                    height: 'auto'
+                });
+                feedbackDiv.className = `quiz-feedback ${data.is_correct ? 'correct' : 'incorrect'}`;
+                
+                // 로딩 표시 제거 및 피드백 표시
+                loadingIndicator.style.display = 'none';
+                feedbackDiv.style.display = 'block';
+
+            } catch (error) {
+                console.error('Error:', error);
+                loadingIndicator.style.display = 'none';
+                placeholder.style.display = 'flex';
+                alert('답안 제출 중 오류가 발생했습니다.');
             }
         }
 

@@ -65,7 +65,11 @@
         };
 
         // API 호출 및 카드 생성
-        fetch('http://localhost:8000/api/content_types')
+        fetch('http://localhost:8000/api/content_types', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            })
             .then(response => response.json())
             .then(data => {
                 const grid = document.getElementById('contentTypeGrid');
