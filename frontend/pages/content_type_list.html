@@ -76,16 +76,14 @@
 
                 data.forEach(type => {
                     const card = document.createElement('a');
-                    // quiz 타입만 활성화, 나머지는 disabled 처리
-                    const isEnabled = type.name === 'quiz';
-                    card.className = `content-type-card ${!isEnabled ? 'disabled' : ''}`;
-                    card.href = isEnabled ? `subject_list.html?content_type_id=${type.id}` : '#';
+                    card.className = 'content-type-card';
+                    card.href = `subject_list.html?content_type_id=${type.id}&type=${type.name}`;
 
                     card.innerHTML = `
                         <div class="card-icon">${typeIcons[type.name] || '📦'}</div>
                         <h3>${typeNames[type.name] || type.name}</h3>
                         <p>${typeDescriptions[type.name] || type.description}</p>
-                        <span class="card-badge ${!isEnabled ? 'coming-soon' : ''}">${isEnabled ? '현재 이용 가능' : 'Coming Soon'}</span>
+                        <span class="card-badge">현재 이용 가능</span>
                     `;
 
                     grid.appendChild(card);

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>학습 주제 선택 - BitBox</title>
+    <title>주제 선택 - BitBox</title>
     <link rel="stylesheet" href="../css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="../js/auth.js" defer></script>
@@ -27,8 +27,8 @@
     <main class="main">
         <section class="content-type-section">
             <div class="section-header">
-                <h2>학습 주제 선택</h2>
-                <p>원하는 학습 주제를 선택하여 시작하세요</p>
+                <h2>주제 선택</h2>
+                <p>학습하고 싶은 주제를 선택하세요</p>
             </div>
             <div id="subjectGrid" class="content-type-grid">
                 <!-- 여기에 동적으로 카드가 추가됩니다 -->
@@ -43,9 +43,10 @@
     </footer>
 
     <script>
-        // URL에서 content_type_id 파라미터 가져오기
+        // URL 파라미터 가져오기
         const urlParams = new URLSearchParams(window.location.search);
         const contentTypeId = urlParams.get('content_type_id');
+        const type = urlParams.get('type');
 
         // 주제별 아이콘 매핑
         const subjectIcons = {
@@ -57,8 +58,26 @@
             'Django': '🎯'
         };
 
+        // 콘텐츠 타입에 따른 타겟 페이지 결정
+        function getTargetPage() {
+            switch (type) {
+                case 'quiz':
+                    return 'quiz.html';
+                case 'codingtest':
+                    return 'coding_test.html';
+                case 'interview':
+                    return 'interview.html';
+                default:
+                    return 'quiz.html';
+            }
+        }
+
         // API 호출 및 카드 생성
-        fetch(`http://localhost:8000/api/subjects?content_type_id=${contentTypeId}`)
+        fetch(`http://localhost:8000/api/subjects?content_type_id=${contentTypeId}`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            })
             .then(response => response.json())
             .then(data => {
                 const grid = document.getElementById('subjectGrid');
@@ -66,14 +85,14 @@
                 data.forEach(subject => {
                     const card = document.createElement('a');
                     card.className = 'content-type-card';
-                    card.href = `quiz.html?subject_id=${subject.id}`;
+                    card.href = `${getTargetPage()}?subject_id=${subject.id}`;
 
                     card.innerHTML = `
-                        <div class="card-icon">${subjectIcons[subject.name] || '📚'}</div>
-                        <h3>${subject.name}</h3>
-                        <p>${subject.description}</p>
-                        <span class="card-badge">퀴즈 풀기</span>
-                    `;
+                    <div class="card-icon">${subjectIcons[subject.name] || '📚'}</div>
+                    <h3>${subject.name}</h3>
+                    <p>${subject.description}</p>
+                    <span class="card-badge">학습 시작하기</span>
+                `;
 
                     grid.appendChild(card);
                 });
@@ -82,11 +101,11 @@
                 console.error('Error fetching subjects:', error);
                 const grid = document.getElementById('subjectGrid');
                 grid.innerHTML = `
-                    <div class="error-message">
-                        <p>주제 목록을 불러오는 중 문제가 발생했습니다.</p>
-                        <p>잠시 후 다시 시도해주세요.</p>
-                    </div>
-                `;
+                <div class="error-message">
+                    <p>주제 목록을 불러오는 중 문제가 발생했습니다.</p>
+                    <p>잠시 후 다시 시도해주세요.</p>
+                </div>
+            `;
             });
     </script>
 </body>

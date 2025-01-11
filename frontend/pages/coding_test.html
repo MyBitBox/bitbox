@@ -4,14 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>퀴즈 - BitBox</title>
+    <title>코딩 테스트 - BitBox</title>
     <link rel="stylesheet" href="../css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="../js/auth.js" defer></script>
     <!-- Toast UI Editor CSS -->
     <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css" />
-    <!-- Toast UI Editor 코어 -->
-    <script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
+    <!-- Monaco Editor -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
 </head>
 
 <body>
@@ -30,20 +30,8 @@
 
     <main class="main">
         <section class="quiz-section">
-            <div class="quiz-container">
-                <div class="quiz-grid">
-                    <div id="quizContent" class="quiz-content"></div>
-                    <div class="quiz-feedback-section">
-                        <div id="loadingIndicator" class="loading-indicator" style="display: none;">
-                            <div class="spinner"></div>
-                            <p>AI가 피드백을 생성하고 있습니다...</p>
-                        </div>
-                        <div id="quizFeedback" class="quiz-feedback" style="display: none;">
-                            <h3>AI 피드백</h3>
-                            <div id="feedbackContent"></div>
-                        </div>
-                    </div>
-                </div>
+            <div id="quizContainer">
+                <!-- 여기에 동적으로 퀴즈가 추가됩니다 -->
             </div>
         </section>
     </main>
@@ -59,6 +47,17 @@
         const subjectId = urlParams.get('subject_id');
         let currentQuizIndex = 0;
         let quizzes = [];
+        let editor;
+
+        // Monaco Editor 설정
+        require.config({
+            paths: {
+                vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs'
+            }
+        });
+        require(['vs/editor/editor.main'], function() {
+            // 에디터는 퀴즈 표시 시 초기화됩니다
+        });
 
         function displayQuiz(quiz) {
             const container = document.getElementById('quizContainer');
@@ -73,26 +72,10 @@
                                 <h2 class="quiz-title">${quiz.title}</h2>
                             </div>
                             <div id="quizContent" class="quiz-content"></div>
-                            ${quiz.type === 'MULTIPLE_CHOICE' ? `
-                                <div class="quiz-options">
-                                    ${quiz.options.map((option, index) => `
-                                        <button class="quiz-option" data-option-id="${option.id}">
-                                            <span class="option-label">${String.fromCharCode(65 + index)}.</span>
-                                            <pre class="option-content">${option.content}</pre>
-                                        </button>
-                                    `).join('')}
-                                </div>
-                            ` : quiz.type === 'CODING' ? `
-                                <div class="quiz-coding">
-                                    <div id="codeEditor" class="code-editor"></div>
-                                    <button class="btn btn-primary submit-code">코드 제출</button>
-                                </div>
-                            ` : quiz.type === 'TEXT' ? `
-                                <div class="quiz-text">
-                                    <textarea class="text-answer" placeholder="답변을 입력하세요..."></textarea>
-                                    <button class="btn btn-primary submit-text">답변 제출</button>
-                                </div>
-                            ` : ''}
+                            <div class="coding-editor">
+                                <div id="codeEditor" style="height: 400px; border: 1px solid #ddd;"></div>
+                                <button id="submitCode" class="btn btn-primary">코드 제출</button>
+                            </div>
                             <div class="quiz-navigation">
                                 <button id="nextQuizBtn" class="btn btn-primary">
                                     다음 문제
@@ -108,7 +91,7 @@
                         <div id="feedbackPlaceholder" class="quiz-feedback-placeholder">
                             <div class="icon">🤔</div>
                             <div class="text">
-                                <p>문제를 읽고 답을 선택해주세요.</p>
+                                <p>문제를 읽고 코드를 작성해주세요.</p>
                                 <p>AI가 상세한 피드백을 제공할 예정입니다.</p>
                             </div>
                         </div>
@@ -120,7 +103,18 @@
                 </div>
             `;
 
-            // 문제 내용만 Toast UI Viewer로 표시
+            // Monaco Editor 초기화
+            editor = monaco.editor.create(document.getElementById('codeEditor'), {
+                value: '# 여기에 코드를 작성하세요',
+                language: 'python',
+                theme: 'vs',
+                minimap: {
+                    enabled: false
+                },
+                automaticLayout: true
+            });
+
+            // 문제 내용 표시
             new toastui.Editor.factory({
                 el: document.getElementById('quizContent'),
                 initialValue: quiz.content,
@@ -128,14 +122,10 @@
                 height: 'auto'
             });
 
-            // 옵션 클릭 이벤트 추가
-            document.querySelectorAll('.quiz-option').forEach(button => {
-                button.addEventListener('click', async function() {
-                    if (this.classList.contains('disabled')) return;
-
-                    const optionId = this.dataset.optionId;
-                    await submitAnswer(quiz.id, parseInt(optionId), this);
-                });
+            // 코드 제출 이벤트
+            document.getElementById('submitCode').addEventListener('click', async function() {
+                const code = editor.getValue();
+                await submitAnswer(quiz.id, code);
             });
 
             // 다음 문제 버튼 이벤트
@@ -150,35 +140,29 @@
             });
         }
 
-        async function submitAnswer(quizId, optionId, selectedButton) {
+        async function submitAnswer(quizId, code) {
             const loadingIndicator = document.getElementById('loadingIndicator');
             const feedbackDiv = document.getElementById('quizFeedback');
             const feedbackContent = document.getElementById('feedbackContent');
             const placeholder = document.getElementById('feedbackPlaceholder');
-            
-            // 로딩 표시 시작
+
             loadingIndicator.style.display = 'flex';
             feedbackDiv.style.display = 'none';
             placeholder.style.display = 'none';
 
             try {
-                const response = await fetch(`http://localhost:8000/api/quizzes/${quizId}/submit?option_id=${optionId}`, {
+                const response = await fetch(`http://localhost:8000/api/quizzes/${quizId}/submit`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
+                    },
+                    body: JSON.stringify({
+                        content: code
+                    })
                 });
 
                 const data = await response.json();
-                
-                // 모든 옵션 버튼 비활성화
-                document.querySelectorAll('.quiz-option').forEach(btn => {
-                    btn.classList.add('disabled');
-                });
-
-                // 선택한 옵션 표시
-                selectedButton.classList.add(data.is_correct ? 'correct' : 'incorrect');
 
                 // 피드백 표시
                 new toastui.Editor.factory({
@@ -188,8 +172,7 @@
                     height: 'auto'
                 });
                 feedbackDiv.className = `quiz-feedback ${data.is_correct ? 'correct' : 'incorrect'}`;
-                
-                // 로딩 표시 제거 및 피드백 표시
+
                 loadingIndicator.style.display = 'none';
                 feedbackDiv.style.display = 'block';
 
@@ -203,19 +186,19 @@
 
         // 퀴즈 데이터 로드
         fetch(`http://localhost:8000/api/quizzes?subject_id=${subjectId}`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-        })
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            })
             .then(response => response.json())
             .then(data => {
-                quizzes = data;
+                quizzes = data.filter(quiz => quiz.type === 'CODING');
                 if (quizzes.length > 0) {
                     displayQuiz(quizzes[0]);
                 } else {
                     document.getElementById('quizContainer').innerHTML = `
                         <div class="error-message">
-                            <p>아직 퀴즈가 준비되지 않았습니다.</p>
+                            <p>아직 코딩 테스트가 준비되지 않았습니다.</p>
                             <p>다른 주제를 선택해주세요.</p>
                         </div>
                     `;
@@ -225,7 +208,7 @@
                 console.error('Error fetching quizzes:', error);
                 document.getElementById('quizContainer').innerHTML = `
                     <div class="error-message">
-                        <p>퀴즈를 불러오는 중 문제가 발생했습니다.</p>
+                        <p>문제를 불러오는 중 문제가 발생했습니다.</p>
                         <p>잠시 후 다시 시도해주세요.</p>
                     </div>
                 `;

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>퀴즈 - BitBox</title>
+    <title>면접 준비 - BitBox</title>
     <link rel="stylesheet" href="../css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="../js/auth.js" defer></script>
@@ -30,20 +30,8 @@
 
     <main class="main">
         <section class="quiz-section">
-            <div class="quiz-container">
-                <div class="quiz-grid">
-                    <div id="quizContent" class="quiz-content"></div>
-                    <div class="quiz-feedback-section">
-                        <div id="loadingIndicator" class="loading-indicator" style="display: none;">
-                            <div class="spinner"></div>
-                            <p>AI가 피드백을 생성하고 있습니다...</p>
-                        </div>
-                        <div id="quizFeedback" class="quiz-feedback" style="display: none;">
-                            <h3>AI 피드백</h3>
-                            <div id="feedbackContent"></div>
-                        </div>
-                    </div>
-                </div>
+            <div id="quizContainer">
+                <!-- 여기에 동적으로 퀴즈가 추가됩니다 -->
             </div>
         </section>
     </main>
@@ -73,26 +61,10 @@
                                 <h2 class="quiz-title">${quiz.title}</h2>
                             </div>
                             <div id="quizContent" class="quiz-content"></div>
-                            ${quiz.type === 'MULTIPLE_CHOICE' ? `
-                                <div class="quiz-options">
-                                    ${quiz.options.map((option, index) => `
-                                        <button class="quiz-option" data-option-id="${option.id}">
-                                            <span class="option-label">${String.fromCharCode(65 + index)}.</span>
-                                            <pre class="option-content">${option.content}</pre>
-                                        </button>
-                                    `).join('')}
-                                </div>
-                            ` : quiz.type === 'CODING' ? `
-                                <div class="quiz-coding">
-                                    <div id="codeEditor" class="code-editor"></div>
-                                    <button class="btn btn-primary submit-code">코드 제출</button>
-                                </div>
-                            ` : quiz.type === 'TEXT' ? `
-                                <div class="quiz-text">
-                                    <textarea class="text-answer" placeholder="답변을 입력하세요..."></textarea>
-                                    <button class="btn btn-primary submit-text">답변 제출</button>
-                                </div>
-                            ` : ''}
+                            <div class="interview-answer">
+                                <div class="answer-editor" id="answerEditor"></div>
+                                <button id="submitAnswer" class="btn btn-primary">답변 제출</button>
+                            </div>
                             <div class="quiz-navigation">
                                 <button id="nextQuizBtn" class="btn btn-primary">
                                     다음 문제
@@ -108,7 +80,7 @@
                         <div id="feedbackPlaceholder" class="quiz-feedback-placeholder">
                             <div class="icon">🤔</div>
                             <div class="text">
-                                <p>문제를 읽고 답을 선택해주세요.</p>
+                                <p>질문을 읽고 답변을 작성해주세요.</p>
                                 <p>AI가 상세한 피드백을 제공할 예정입니다.</p>
                             </div>
                         </div>
@@ -120,7 +92,7 @@
                 </div>
             `;
 
-            // 문제 내용만 Toast UI Viewer로 표시
+            // Toast UI Editor 초기화 (문제 내용)
             new toastui.Editor.factory({
                 el: document.getElementById('quizContent'),
                 initialValue: quiz.content,
@@ -128,14 +100,19 @@
                 height: 'auto'
             });
 
-            // 옵션 클릭 이벤트 추가
-            document.querySelectorAll('.quiz-option').forEach(button => {
-                button.addEventListener('click', async function() {
-                    if (this.classList.contains('disabled')) return;
+            // Toast UI Editor 초기화 (답변 에디터)
+            const answerEditor = new toastui.Editor({
+                el: document.getElementById('answerEditor'),
+                height: '300px',
+                initialEditType: 'markdown',
+                previewStyle: 'vertical',
+                placeholder: '여기에 답변을 작성해주세요...'
+            });
 
-                    const optionId = this.dataset.optionId;
-                    await submitAnswer(quiz.id, parseInt(optionId), this);
-                });
+            // 답변 제출 이벤트
+            document.getElementById('submitAnswer').addEventListener('click', async function() {
+                const answer = answerEditor.getMarkdown();
+                await submitAnswer(quiz.id, answer);
             });
 
             // 다음 문제 버튼 이벤트
@@ -150,35 +127,29 @@
             });
         }
 
-        async function submitAnswer(quizId, optionId, selectedButton) {
+        async function submitAnswer(quizId, answer) {
             const loadingIndicator = document.getElementById('loadingIndicator');
             const feedbackDiv = document.getElementById('quizFeedback');
             const feedbackContent = document.getElementById('feedbackContent');
             const placeholder = document.getElementById('feedbackPlaceholder');
-            
-            // 로딩 표시 시작
+
             loadingIndicator.style.display = 'flex';
             feedbackDiv.style.display = 'none';
             placeholder.style.display = 'none';
 
             try {
-                const response = await fetch(`http://localhost:8000/api/quizzes/${quizId}/submit?option_id=${optionId}`, {
+                const response = await fetch(`http://localhost:8000/api/quizzes/${quizId}/submit`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
+                    },
+                    body: JSON.stringify({
+                        content: answer
+                    })
                 });
 
                 const data = await response.json();
-                
-                // 모든 옵션 버튼 비활성화
-                document.querySelectorAll('.quiz-option').forEach(btn => {
-                    btn.classList.add('disabled');
-                });
-
-                // 선택한 옵션 표시
-                selectedButton.classList.add(data.is_correct ? 'correct' : 'incorrect');
 
                 // 피드백 표시
                 new toastui.Editor.factory({
@@ -188,8 +159,7 @@
                     height: 'auto'
                 });
                 feedbackDiv.className = `quiz-feedback ${data.is_correct ? 'correct' : 'incorrect'}`;
-                
-                // 로딩 표시 제거 및 피드백 표시
+
                 loadingIndicator.style.display = 'none';
                 feedbackDiv.style.display = 'block';
 
@@ -197,25 +167,25 @@
                 console.error('Error:', error);
                 loadingIndicator.style.display = 'none';
                 placeholder.style.display = 'flex';
-                alert('답안 제출 중 오류가 발생했습니다.');
+                alert('답변 제출 중 오류가 발생했습니다.');
             }
         }
 
         // 퀴즈 데이터 로드
         fetch(`http://localhost:8000/api/quizzes?subject_id=${subjectId}`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-        })
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            })
             .then(response => response.json())
             .then(data => {
-                quizzes = data;
+                quizzes = data.filter(quiz => quiz.type === 'TEXT');
                 if (quizzes.length > 0) {
                     displayQuiz(quizzes[0]);
                 } else {
                     document.getElementById('quizContainer').innerHTML = `
                         <div class="error-message">
-                            <p>아직 퀴즈가 준비되지 않았습니다.</p>
+                            <p>아직 면접 문제가 준비되지 않았습니다.</p>
                             <p>다른 주제를 선택해주세요.</p>
                         </div>
                     `;
@@ -225,7 +195,7 @@
                 console.error('Error fetching quizzes:', error);
                 document.getElementById('quizContainer').innerHTML = `
                     <div class="error-message">
-                        <p>퀴즈를 불러오는 중 문제가 발생했습니다.</p>
+                        <p>문제를 불러오는 중 문제가 발생했습니다.</p>
                         <p>잠시 후 다시 시도해주세요.</p>
                     </div>
                 `;
