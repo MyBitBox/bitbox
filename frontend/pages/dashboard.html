@@ -37,23 +37,19 @@
                     <h3>전체 학습 개요</h3>
                     <div class="summary-stats">
                         <div class="stat-item">
-                            <span class="stat-label">총 학습 시간</span>
-                            <span class="stat-value" id="totalStudyTime">-</span>
+                            <span class="stat-label">총 퀴즈 수</span>
+                            <span class="stat-value" id="totalQuizzes">-</span>
                         </div>
                         <div class="stat-item">
-                            <span class="stat-label">완료한 퀴즈</span>
-                            <span class="stat-value" id="completedQuizzes">-</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">평균 정답률</span>
-                            <span class="stat-value" id="averageAccuracy">-</span>
+                            <span class="stat-label">정답률</span>
+                            <span class="stat-value" id="correctRate">-</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- 현재 학습 중인 주제 -->
                 <div class="dashboard-card current-topics-card">
-                    <h3>현재 학습 중인 주제</h3>
+                    <h3>학습 중인 주제</h3>
                     <div class="topics-list" id="currentTopics">
                         <div class="loading">로딩 중...</div>
                     </div>
@@ -83,14 +79,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- AI 피드백 -->
-                <div class="dashboard-card feedback-card">
-                    <h3>학습 피드백</h3>
-                    <div class="feedback-content" id="aiFeedback">
-                        <div class="loading">피드백을 분석하는 중...</div>
-                    </div>
-                </div>
             </div>
         </section>
     </main>
@@ -102,18 +90,12 @@
     </footer>
 
     <script>
-        // 토큰 체크
-        const token = localStorage.getItem('token');
-        if (!token) {
-            window.location.href = 'login.html';
-        }
-
         // 대시보드 데이터 로드
         async function loadDashboard() {
             try {
-                const response = await fetch('http://localhost:8000/api/dashboard', {
+                const response = await fetch('http://localhost:8000/api/users/me/progress', {
                     headers: {
-                        'Authorization': `Bearer ${token}`
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
                     }
                 });
 
@@ -131,51 +113,68 @@
 
         function updateDashboard(data) {
             // 마지막 업데이트 시간
-            document.getElementById('lastUpdate').textContent = new Date().toLocaleString();
+            document.getElementById('lastUpdate').textContent = new Date(data.last_update).toLocaleString();
 
             // 전체 학습 개요 업데이트
-            document.getElementById('totalStudyTime').textContent = data.total_study_time || '0시간';
-            document.getElementById('completedQuizzes').textContent = data.completed_quizzes || '0개';
-            document.getElementById('averageAccuracy').textContent = `${data.average_accuracy || 0}%`;
+            document.getElementById('totalQuizzes').textContent = `${data.total_quizzes}개`;
+            document.getElementById('correctRate').textContent = `${(data.correct_rate * 100).toFixed(1)}%`;
+            document.getElementById('correctRateBar').style.width = `${data.correct_rate * 100}%`;
+            document.getElementById('incorrectRate').textContent = `${(100 - data.correct_rate * 100).toFixed(1)}%`;
+            document.getElementById('incorrectRateBar').style.width = `${100 - data.correct_rate * 100}%`;
 
             // 현재 학습 중인 주제 업데이트
             const topicsList = document.getElementById('currentTopics');
-            if (data.current_topics && data.current_topics.length > 0) {
-                topicsList.innerHTML = data.current_topics.map(topic => `
-                    <div class="topic-item">
-                        <div class="topic-info">
-                            <h4>${topic.name}</h4>
-                            <p>${topic.progress}% 완료</p>
+            if (data.subjects && data.subjects.length > 0) {
+                // content type별로 subjects 그룹화
+                const subjectsByContentType = data.subjects.reduce((acc, subject) => {
+                    const contentType = data.content_types.find(ct => ct.id === subject.content_type_id);
+                    if (!acc[contentType.id]) {
+                        acc[contentType.id] = {
+                            contentType,
+                            subjects: []
+                        };
+                    }
+                    acc[contentType.id].subjects.push(subject);
+                    return acc;
+                }, {});
+
+                topicsList.innerHTML = Object.values(subjectsByContentType).map(group => `
+                    <div class="content-type-group">
+                        <div class="content-type-header">
+                            <h4>${group.contentType.name}</h4>
                         </div>
-                        <div class="topic-progress">
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: ${topic.progress}%"></div>
+                        ${group.subjects.map(subject => `
+                            <div class="topic-item">
+                                <div class="topic-info">
+                                    <div class="topic-header">
+                                        <h4>${subject.name}</h4>
+                                        <div class="topic-type">${group.contentType.name}</div>
+                                    </div>
+                                    <p>${(subject.progress_rate * 100).toFixed(1)}% 완료</p>
+                                </div>
+                                <div class="topic-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: ${subject.progress_rate * 100}%"></div>
+                                    </div>
+                                </div>
+                                <div class="topic-actions">
+                                    <a href="/frontend/pages/quiz.html?subject_id=${subject.id}" class="btn btn-outline btn-sm">
+                                        학습 계속하기
+                                    </a>
+                                </div>
                             </div>
-                        </div>
+                        `).join('')}
                     </div>
                 `).join('');
             } else {
-                topicsList.innerHTML = '<p class="no-data">현재 학습 중인 주제가 없습니다.</p>';
-            }
-
-            // 성과 그래프 업데이트
-            const correctRate = data.correct_rate || 0;
-            const incorrectRate = data.incorrect_rate || 0;
-            document.getElementById('correctRate').textContent = `${correctRate}%`;
-            document.getElementById('incorrectRate').textContent = `${incorrectRate}%`;
-            document.getElementById('correctRateBar').style.width = `${correctRate}%`;
-            document.getElementById('incorrectRateBar').style.width = `${incorrectRate}%`;
-
-            // AI 피드백 업데이트
-            const feedbackContent = document.getElementById('aiFeedback');
-            if (data.ai_feedback) {
-                feedbackContent.innerHTML = `
-                    <div class="feedback-message">
-                        <p>${data.ai_feedback}</p>
+                topicsList.innerHTML = `
+                    <div class="no-data">
+                        <p>현재 학습 중인 주제가 없습니다.</p>
+                        <a href="/frontend/pages/content_type_list.html" class="btn btn-primary btn-sm">
+                            학습 시작하기
+                        </a>
                     </div>
                 `;
-            } else {
-                feedbackContent.innerHTML = '<p class="no-data">아직 피드백이 없습니다.</p>';
             }
         }
 
@@ -190,12 +189,6 @@
                 `;
             });
         }
-
-        // 로그아웃 처리
-        document.getElementById('logoutBtn').addEventListener('click', function() {
-            localStorage.removeItem('token');
-            window.location.href = '../index.html';
-        });
 
         // 페이지 로드 시 대시보드 정보 불러오기
         loadDashboard();

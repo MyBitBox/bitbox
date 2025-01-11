@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr
-from typing import Optional
+from typing import Optional, Dict, List
 from datetime import datetime
 
 
@@ -27,6 +27,28 @@ class UserResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class ContentTypeProgress(BaseModel):
+    id: int
+    name: str
+    description: str
+
+
+class SubjectProgress(BaseModel):
+    id: int
+    name: str
+    description: str
+    content_type_id: int
+    progress_rate: float
+
+
+class UserProgressResponse(BaseModel):
+    total_quizzes: int
+    correct_rate: float
+    content_types: List[ContentTypeProgress]
+    subjects: List[SubjectProgress]
+    last_update: datetime
 
 
 class Token(BaseModel):
