@@ -2,10 +2,12 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
 from app.core.database import get_db
+from app.core.openai import generate_quiz_feedback
+from app.core.utils import get_current_user
 from app.schemas.quiz import QuizResponse, QuizCreate, QuizUpdate, QuizSubmitResponse
 from app.models.quiz import Quiz
 from app.models.answer import Answer
-from app.core.openai import generate_quiz_feedback
+from app.models.user import User
 
 router = APIRouter(prefix="/api/quizzes", tags=["quizzes"])
 
@@ -71,7 +73,12 @@ def get_quiz(quiz_id: int, db: Session = Depends(get_db)):
     "/{quiz_id}/submit",
     response_model=QuizSubmitResponse,
 )
-async def submit_quiz(quiz_id: int, option_id: int, db: Session = Depends(get_db)):
+async def submit_quiz(
+    quiz_id: int,
+    option_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     quiz = db.query(Quiz).filter(Quiz.id == quiz_id).first()
     if not quiz:
         raise HTTPException(
@@ -95,6 +102,34 @@ async def submit_quiz(quiz_id: int, option_id: int, db: Session = Depends(get_db
             correct_content=None if is_correct else correct_option["content"],
             is_correct=is_correct,
         )
+
+        # 기존 시도 횟수 확인 및 업데이트
+        existing_answer = (
+            db.query(Answer)
+            .filter(Answer.quiz_id == quiz_id, Answer.user_id == current_user.id)
+            .first()
+        )
+        if existing_answer:
+            existing_answer.retry_count += 1
+            existing_answer.is_correct = is_correct
+            existing_answer.content = selected_option["content"]
+            existing_answer.option_id = option_id
+            existing_answer.feedback_content = feedback
+            db.add(existing_answer)
+        else:
+            new_answer = Answer(
+                quiz_id=quiz_id,
+                user_id=current_user.id,
+                option_id=option_id,
+                content=selected_option["content"],
+                is_correct=is_correct,
+                feedback_content=feedback,
+                subject_id=quiz.subject_id,
+                retry_count=1,
+            )
+            db.add(new_answer)
+
+        db.commit()
 
         return QuizSubmitResponse(is_correct=is_correct, detail=feedback)
 
