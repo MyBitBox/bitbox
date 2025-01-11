@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import List, Optional
+from app.models.quiz import QuizType
 
 
 class QuizOption(BaseModel):
@@ -19,6 +20,7 @@ class QuizBase(BaseModel):
 class QuizCreate(QuizBase):
     subject_id: int
     correct_option_id: int
+    type: QuizType = QuizType.MULTIPLE_CHOICE
 
 
 class QuizUpdate(QuizBase):
@@ -28,6 +30,7 @@ class QuizUpdate(QuizBase):
 class QuizResponse(QuizBase):
     id: int
     subject_id: int
+    type: QuizType
 
     class Config:
         from_attributes = True

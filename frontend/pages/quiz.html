@@ -61,14 +61,26 @@
                                 <h2 class="quiz-title">${quiz.title}</h2>
                             </div>
                             <div id="quizContent" class="quiz-content"></div>
-                            <div class="quiz-options">
-                                ${quiz.options.map((option, index) => `
-                                    <button class="quiz-option" data-option-id="${option.id}">
-                                        <span class="option-label">${String.fromCharCode(65 + index)}.</span>
-                                        <pre class="option-content">${option.content}</pre>
-                                    </button>
-                                `).join('')}
-                            </div>
+                            ${quiz.type === 'MULTIPLE_CHOICE' ? `
+                                <div class="quiz-options">
+                                    ${quiz.options.map((option, index) => `
+                                        <button class="quiz-option" data-option-id="${option.id}">
+                                            <span class="option-label">${String.fromCharCode(65 + index)}.</span>
+                                            <pre class="option-content">${option.content}</pre>
+                                        </button>
+                                    `).join('')}
+                                </div>
+                            ` : quiz.type === 'CODING' ? `
+                                <div class="quiz-coding">
+                                    <div id="codeEditor" class="code-editor"></div>
+                                    <button class="btn btn-primary submit-code">코드 제출</button>
+                                </div>
+                            ` : quiz.type === 'TEXT' ? `
+                                <div class="quiz-text">
+                                    <textarea class="text-answer" placeholder="답변을 입력하세요..."></textarea>
+                                    <button class="btn btn-primary submit-text">답변 제출</button>
+                                </div>
+                            ` : ''}
                             <div class="quiz-navigation">
                                 <button id="nextQuizBtn" class="btn btn-primary">
                                     다음 문제
@@ -178,7 +190,11 @@
         }
 
         // 퀴즈 데이터 로드
-        fetch(`http://localhost:8000/api/quizzes?subject_id=${subjectId}`)
+        fetch(`http://localhost:8000/api/quizzes?subject_id=${subjectId}`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        })
             .then(response => response.json())
             .then(data => {
                 quizzes = data;

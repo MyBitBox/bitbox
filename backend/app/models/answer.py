@@ -5,12 +5,12 @@ from app.core.database import Base
 
 
 class Answer(Base):
-    __tablename__ = "answers"
+    __tablename__ = "answers_new"
 
     id = Column(Integer, primary_key=True, index=True)
-    quiz_id = Column(Integer, ForeignKey("quizzes.id"), nullable=False)
+    quiz_id = Column(Integer, ForeignKey("quizzes_new.id"), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    option_id = Column(Integer, nullable=False)  # 선택한 옵션 ID 추가
+    option_id = Column(Integer, nullable=True)  # 객관식일 때만 사용
     is_correct = Column(Boolean, nullable=False)
     time_taken = Column(Integer, nullable=False)  # 문제를 푸는 데 걸린 시간 추가
     feedback_content = Column(Text, nullable=True)  # AI 피드백 내용 추가
@@ -22,7 +22,9 @@ class Answer(Base):
     updated_at = Column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
-    content = Column(Text, nullable=False)  # 선택한 옵션의 내용을 저장하는 필드 추가
+    content = Column(
+        Text, nullable=False
+    )  # 사용자의 답변 (선택한 옵션 또는 입력한 코드/텍스트)
 
     quiz = relationship("Quiz", back_populates="answers")
     user = relationship("User", back_populates="answers")
