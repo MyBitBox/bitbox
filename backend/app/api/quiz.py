@@ -71,43 +71,36 @@ def get_quiz(quiz_id: int, db: Session = Depends(get_db)):
     "/{quiz_id}/submit",
     response_model=QuizSubmitResponse,
 )
-async def submit_quiz(
-    quiz_id: int, 
-    option_id: int, 
-    db: Session = Depends(get_db)
-):
+async def submit_quiz(quiz_id: int, option_id: int, db: Session = Depends(get_db)):
     quiz = db.query(Quiz).filter(Quiz.id == quiz_id).first()
     if not quiz:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
-            detail="Quiz not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Quiz not found"
         )
 
     is_correct = quiz.correct_option_id == option_id
-    
+
     # 선택된 옵션과 정답 옵션 가져오기
     selected_option = next(opt for opt in quiz.options if opt["id"] == option_id)
-    correct_option = next(opt for opt in quiz.options if opt["id"] == quiz.correct_option_id)
+    correct_option = next(
+        opt for opt in quiz.options if opt["id"] == quiz.correct_option_id
+    )
 
     try:
         # OpenAI를 통한 피드백 생성
         feedback = await generate_quiz_feedback(
             quiz_title=quiz.title,
             quiz_content=quiz.content,
-            selected_content=selected_option['content'],
-            correct_content=None if is_correct else correct_option['content'],
-            is_correct=is_correct
+            selected_content=selected_option["content"],
+            correct_content=None if is_correct else correct_option["content"],
+            is_correct=is_correct,
         )
 
-        return QuizSubmitResponse(
-            is_correct=is_correct,
-            detail=feedback
-        )
+        return QuizSubmitResponse(is_correct=is_correct, detail=feedback)
 
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(e)
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
 
 

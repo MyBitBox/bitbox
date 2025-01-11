@@ -3,12 +3,13 @@ from typing import List, Dict, Any
 
 JEJU_OPENAI_URL = "https://open-api.jejucodingcamp.workers.dev/"
 
+
 async def generate_quiz_feedback(
     quiz_title: str,
     quiz_content: str,
     selected_content: str,
     correct_content: str = None,
-    is_correct: bool = False
+    is_correct: bool = False,
 ) -> str:
     """
     퀴즈 응답에 대한 AI 피드백을 생성합니다.
@@ -45,12 +46,9 @@ async def generate_quiz_feedback(
     messages: List[Dict[str, str]] = [
         {
             "role": "system",
-            "content": "당신은 프로그래밍 교육 전문가입니다. 학습자의 이해를 돕기 위해 명확하고 친절한 설명을 제공해주세요."
+            "content": "당신은 프로그래밍 교육 전문가입니다. 학습자의 이해를 돕기 위해 명확하고 친절한 설명을 제공해주세요.",
         },
-        {
-            "role": "user",
-            "content": user_content
-        }
+        {"role": "user", "content": user_content},
     ]
 
     try:
@@ -58,12 +56,14 @@ async def generate_quiz_feedback(
             async with session.post(JEJU_OPENAI_URL, json=messages) as response:
                 if response.status == 200:
                     result = await response.json()
-                    return result['choices'][0]['message']['content']
+                    return result["choices"][0]["message"]["content"]
                 else:
                     error_detail = await response.text()
-                    print(f"API Error: Status {response.status}, Detail: {error_detail}")
+                    print(
+                        f"API Error: Status {response.status}, Detail: {error_detail}"
+                    )
                     return "죄송합니다. 피드백을 생성하는 중 오류가 발생했습니다."
 
     except Exception as e:
         print(f"Error generating feedback: {str(e)}")
-        return "죄송합니다. 피드백을 생성하는 중 오류가 발생했습니다." 
+        return "죄송합니다. 피드백을 생성하는 중 오류가 발생했습니다."
