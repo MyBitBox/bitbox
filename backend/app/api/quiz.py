@@ -1,11 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Body
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from app.core.database import get_db
 from app.core.openai import generate_quiz_feedback
 from app.core.utils import get_current_user
 from app.schemas.quiz import QuizResponse, QuizCreate, QuizUpdate, QuizSubmitResponse
-from app.models.quiz import Quiz
+from app.models.quiz import Quiz, QuizType
 from app.models.answer import Answer
 from app.models.user import User
 
@@ -31,6 +31,9 @@ def get_quizzes(subject_id: int, db: Session = Depends(get_db)):
     },
 )
 def create_quiz(quiz: QuizCreate, db: Session = Depends(get_db)):
+    # 타입별 필드 유효성 검사
+    quiz.validate_fields()
+
     db_quiz = db.query(Quiz).filter(Quiz.title == quiz.title).first()
     if db_quiz:
         raise HTTPException(
@@ -40,8 +43,11 @@ def create_quiz(quiz: QuizCreate, db: Session = Depends(get_db)):
     new_quiz = Quiz(
         title=quiz.title,
         content=quiz.content,
-        options=[option.model_dump() for option in quiz.options],
+        type=quiz.type,
         subject_id=quiz.subject_id,
+        options=(
+            [option.model_dump() for option in quiz.options] if quiz.options else None
+        ),
         correct_option_id=quiz.correct_option_id,
     )
     db.add(new_quiz)
@@ -75,7 +81,9 @@ def get_quiz(quiz_id: int, db: Session = Depends(get_db)):
 )
 async def submit_quiz(
     quiz_id: int,
-    option_id: int,
+    option_id: Optional[int] = Body(None),
+    content: Optional[str] = Body(None),
+    time_taken: Optional[int] = Body(default=0),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -85,22 +93,39 @@ async def submit_quiz(
             status_code=status.HTTP_404_NOT_FOUND, detail="Quiz not found"
         )
 
-    is_correct = quiz.correct_option_id == option_id
-
-    # 선택된 옵션과 정답 옵션 가져오기
-    selected_option = next(opt for opt in quiz.options if opt["id"] == option_id)
-    correct_option = next(
-        opt for opt in quiz.options if opt["id"] == quiz.correct_option_id
-    )
+    # 퀴즈 타입에 따른 처리
+    if quiz.type == QuizType.MULTIPLE_CHOICE:
+        if option_id is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Multiple choice quiz requires option_id",
+            )
+        is_correct = quiz.correct_option_id == option_id
+        selected_option = next(opt for opt in quiz.options if opt["id"] == option_id)
+        correct_option = next(
+            opt for opt in quiz.options if opt["id"] == quiz.correct_option_id
+        )
+        selected_content = selected_option["content"]
+        correct_content = None if is_correct else correct_option["content"]
+    else:
+        if content is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"{quiz.type.value} quiz requires content",
+            )
+        selected_content = content
+        correct_content = None
+        is_correct = False  # 코딩 테스트와 텍스트 답변은 일단 False로 설정
 
     try:
         # OpenAI를 통한 피드백 생성
         feedback = await generate_quiz_feedback(
             quiz_title=quiz.title,
             quiz_content=quiz.content,
-            selected_content=selected_option["content"],
-            correct_content=None if is_correct else correct_option["content"],
+            selected_content=selected_content,
+            correct_content=correct_content,
             is_correct=is_correct,
+            quiz_type=quiz.type.value,
         )
 
         # 기존 시도 횟수 확인 및 업데이트
@@ -112,8 +137,9 @@ async def submit_quiz(
         if existing_answer:
             existing_answer.retry_count += 1
             existing_answer.is_correct = is_correct
-            existing_answer.content = selected_option["content"]
+            existing_answer.content = selected_content
             existing_answer.option_id = option_id
+            existing_answer.time_taken = time_taken
             existing_answer.feedback_content = feedback
             db.add(existing_answer)
         else:
@@ -121,11 +147,12 @@ async def submit_quiz(
                 quiz_id=quiz_id,
                 user_id=current_user.id,
                 option_id=option_id,
-                content=selected_option["content"],
+                content=selected_content,
                 is_correct=is_correct,
                 feedback_content=feedback,
                 subject_id=quiz.subject_id,
                 retry_count=1,
+                time_taken=time_taken,
             )
             db.add(new_answer)
 

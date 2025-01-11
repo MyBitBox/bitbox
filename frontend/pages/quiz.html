@@ -30,7 +30,7 @@
 
     <main class="main">
         <section class="quiz-section">
-            <div class="quiz-container">
+            <div id="quizContainer" class="quiz-container">
                 <div class="quiz-grid">
                     <div id="quizContent" class="quiz-content"></div>
                     <div class="quiz-feedback-section">
@@ -72,7 +72,9 @@
                                 </div>
                                 <h2 class="quiz-title">${quiz.title}</h2>
                             </div>
-                            <div id="quizContent" class="quiz-content"></div>
+                            <div class="quiz-content">
+                                <div id="quizContent"></div>
+                            </div>
                             ${quiz.type === 'MULTIPLE_CHOICE' ? `
                                 <div class="quiz-options">
                                     ${quiz.options.map((option, index) => `
@@ -162,12 +164,15 @@
             placeholder.style.display = 'none';
 
             try {
-                const response = await fetch(`http://localhost:8000/api/quizzes/${quizId}/submit?option_id=${optionId}`, {
+                const response = await fetch(`http://localhost:8000/api/quizzes/${quizId}/submit`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
+                    },
+                    body: JSON.stringify({
+                        option_id: optionId
+                    })
                 });
 
                 const data = await response.json();
