@@ -7,6 +7,7 @@
     <title>주제 선택 - BitBox</title>
     <link rel="stylesheet" href="../css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="../js/config.js"></script>
     <script src="../js/auth.js" defer></script>
 </head>
 
@@ -73,7 +74,7 @@
         }
 
         // API 호출 및 카드 생성
-        fetch(`http://localhost:8000/api/subjects?content_type_id=${contentTypeId}`, {
+        fetch(config.getApiUrl(`/api/subjects?content_type_id=${contentTypeId}`), {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }

@@ -7,6 +7,7 @@
     <title>퀴즈 - BitBox</title>
     <link rel="stylesheet" href="../css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="../js/config.js"></script>
     <script src="../js/auth.js" defer></script>
     <!-- Toast UI Editor CSS -->
     <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css" />
@@ -248,83 +249,80 @@
             const feedbackDiv = document.getElementById('quizFeedback');
             const feedbackContent = document.getElementById('feedbackContent');
             const placeholder = document.getElementById('feedbackPlaceholder');
-            
+
             try {
-                // 버튼 상태 업데이트
+                // 모든 옵션 버튼 비활성화
                 document.querySelectorAll('.quiz-option').forEach(btn => {
                     btn.classList.add('disabled');
                 });
 
-                // 로딩 표시
-                loadingIndicator.style.display = 'flex';
-                feedbackDiv.style.display = 'none';
-                placeholder.style.display = 'none';
-
-                // 답변 저장
+                // 선택한 답변 저장
                 quizState.setAnswer(quizId, optionId);
 
-                // API 호출
-                const response = await fetch(`http://localhost:8000/api/quizzes/${quizId}/submit`, {
+                // 로딩 표시
+                loadingIndicator.style.display = 'flex';
+                placeholder.style.display = 'none';
+
+                // 답변 제출
+                const response = await fetch(config.getApiUrl(`/api/quizzes/${quizId}/submit`), {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${localStorage.getItem('token')}`
                     },
-                    body: JSON.stringify({ option_id: optionId })
+                    body: JSON.stringify({
+                        option_id: optionId
+                    })
                 });
 
-                const data = await response.json();
-                
-                // 피드백 저장
-                quizState.setFeedback(quizId, data);
+                if (response.ok) {
+                    const data = await response.json();
+                    quizState.setFeedback(quizId, data);
 
-                // UI 업데이트
-                selectedButton.classList.add(data.is_correct ? 'correct' : 'incorrect');
-                
-                // 피드백 표시
-                new toastui.Editor.factory({
-                    el: feedbackContent,
-                    initialValue: data.detail,
-                    viewer: true,
-                    height: 'auto'
-                });
-                
-                feedbackDiv.className = `quiz-feedback ${data.is_correct ? 'correct' : 'incorrect'}`;
-                loadingIndicator.style.display = 'none';
-                feedbackDiv.style.display = 'block';
+                    // 피드백 표시
+                    feedbackDiv.style.display = 'block';
+                    new toastui.Editor.factory({
+                        el: feedbackContent,
+                        initialValue: data.detail,
+                        viewer: true,
+                        height: 'auto'
+                    });
 
+                    // 정답 여부에 따른 스타일 적용
+                    selectedButton.classList.add(data.is_correct ? 'correct' : 'incorrect');
+                } else {
+                    throw new Error('답변을 제출할 수 없습니다.');
+                }
             } catch (error) {
                 console.error('Error:', error);
+                alert('답변 제출 중 오류가 발생했습니다. 다시 시도해주세요.');
+            } finally {
                 loadingIndicator.style.display = 'none';
-                placeholder.style.display = 'flex';
-                alert('답안 제출 중 오류가 발생했습니다.');
             }
         }
 
-        // 퀴즈 데이터 초기 로드
-        async function initializeQuizzes() {
+        // 퀴즈 데이터 로드
+        async function loadQuizzes() {
             try {
-                const response = await fetch(`http://localhost:8000/api/quizzes?subject_id=${subjectId}`, {
+                const response = await fetch(config.getApiUrl(`/api/quizzes?subject_id=${subjectId}`), {
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('token')}`
                     }
                 });
-                
-                const data = await response.json();
-                quizState.quizzes = data;
-                
-                if (quizState.quizzes.length > 0) {
-                    displayQuiz(quizState.quizzes[quizState.currentQuizIndex]);
+
+                if (response.ok) {
+                    quizState.quizzes = await response.json();
+                    if (quizState.quizzes.length > 0) {
+                        displayQuiz(quizState.quizzes[quizState.currentQuizIndex]);
+                    } else {
+                        alert('이 주제에 대한 퀴즈가 없습니다.');
+                        window.location.href = 'subject_list.html';
+                    }
                 } else {
-                    document.getElementById('quizContainer').innerHTML = `
-                        <div class="error-message">
-                            <p>아직 퀴즈가 준비되지 않았습니다.</p>
-                            <p>다른 주제를 선택해주세요.</p>
-                        </div>
-                    `;
+                    throw new Error('퀴즈를 불러올 수 없습니다.');
                 }
             } catch (error) {
-                console.error('Error fetching quizzes:', error);
+                console.error('Error:', error);
                 document.getElementById('quizContainer').innerHTML = `
                     <div class="error-message">
                         <p>퀴즈를 불러오는 중 문제가 발생했습니다.</p>
@@ -334,8 +332,8 @@
             }
         }
 
-        // 초기화
-        initializeQuizzes();
+        // 페이지 로드 시 퀴즈 데이터 불러오기
+        loadQuizzes();
     </script>
 </body>
 
