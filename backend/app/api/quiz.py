@@ -78,6 +78,26 @@ def get_quiz(quiz_id: int, db: Session = Depends(get_db)):
 @router.post(
     "/{quiz_id}/submit",
     response_model=QuizSubmitResponse,
+    responses={
+        404: {
+            "description": "Quiz not found",
+            "content": {"application/json": {"example": {"detail": "Quiz not found"}}},
+        },
+        400: {
+            "description": "Invalid quiz submission",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Multiple choice quiz requires option_id"}
+                }
+            },
+        },
+        500: {
+            "description": "Internal server error",
+            "content": {
+                "application/json": {"example": {"detail": "Error generating feedback"}}
+            },
+        },
+    },
 )
 async def submit_quiz(
     quiz_id: int,
@@ -101,10 +121,18 @@ async def submit_quiz(
                 detail="Multiple choice quiz requires option_id",
             )
         is_correct = quiz.correct_option_id == option_id
-        selected_option = next(opt for opt in quiz.options if opt["id"] == option_id)
-        correct_option = next(
-            opt for opt in quiz.options if opt["id"] == quiz.correct_option_id
-        )
+        try:
+            selected_option = next(
+                opt for opt in quiz.options if opt["id"] == option_id
+            )
+            correct_option = next(
+                opt for opt in quiz.options if opt["id"] == quiz.correct_option_id
+            )
+        except StopIteration:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid option_id",
+            )
         selected_content = selected_option["content"]
         correct_content = None if is_correct else correct_option["content"]
     else:
@@ -162,7 +190,8 @@ async def submit_quiz(
 
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error generating feedback",
         )
 
 
@@ -173,18 +202,45 @@ async def submit_quiz(
         404: {
             "description": "Quiz not found",
             "content": {"application/json": {"example": {"detail": "Quiz not found"}}},
-        }
+        },
+        400: {
+            "description": "Invalid quiz data",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Invalid quiz type or fields"}
+                }
+            },
+        },
+        409: {
+            "description": "Quiz title already exists",
+            "content": {
+                "application/json": {"example": {"detail": "Quiz title already exists"}}
+            },
+        },
     },
 )
 def update_quiz(quiz_id: int, quiz: QuizUpdate, db: Session = Depends(get_db)):
+    # 타입별 필드 유효성 검사
+    quiz.validate_fields()
+
     db_quiz = db.query(Quiz).filter(Quiz.id == quiz_id).first()
     if not db_quiz:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Quiz not found"
         )
-    db_quiz.title = quiz.title
-    db_quiz.content = quiz.content
-    db_quiz.options = quiz.options
+
+    # Check if title exists for another quiz
+    existing_quiz = (
+        db.query(Quiz).filter(Quiz.title == quiz.title, Quiz.id != quiz_id).first()
+    )
+    if existing_quiz:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Quiz title already exists"
+        )
+
+    for key, value in quiz.model_dump(exclude_unset=True).items():
+        setattr(db_quiz, key, value)
+
     db.commit()
     db.refresh(db_quiz)
     return db_quiz
@@ -192,12 +248,15 @@ def update_quiz(quiz_id: int, quiz: QuizUpdate, db: Session = Depends(get_db)):
 
 @router.delete(
     "/{quiz_id}",
-    status_code=status.HTTP_204_NO_CONTENT,
     responses={
         404: {
             "description": "Quiz not found",
             "content": {"application/json": {"example": {"detail": "Quiz not found"}}},
-        }
+        },
+        200: {
+            "description": "Quiz deleted",
+            "content": {"application/json": {"example": {"detail": "Quiz deleted"}}},
+        },
     },
 )
 def delete_quiz(quiz_id: int, db: Session = Depends(get_db)):
