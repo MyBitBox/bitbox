@@ -585,45 +585,126 @@ body {
 /* 대시보드 페이지 스타일 */
 
 .dashboard-section {
-    padding: 6rem 2rem;
+    padding: 2rem 1.5rem;
     max-width: 1200px;
     margin: 0 auto;
 }
 
 .dashboard-header {
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
     text-align: center;
 }
 
 .dashboard-header h2 {
-    font-size: 2rem;
+    font-size: 1.5rem;
     font-weight: 700;
-    margin-bottom: 0.5rem;
 }
 
-.last-update {
-    color: var(--text-secondary);
-    font-size: 0.875rem;
-}
-
-.dashboard-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 2rem;
+.dashboard-content {
+    max-width: 800px;
+    margin: 0 auto;
 }
 
 .dashboard-card {
     background-color: white;
-    padding: 2rem;
-    border-radius: 1rem;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.dashboard-card h3 {
-    font-size: 1.25rem;
-    font-weight: 700;
+.content-type-group {
     margin-bottom: 1.5rem;
+}
+
+.content-type-group:last-child {
+    margin-bottom: 0;
+}
+
+.content-type-header {
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.content-type-header h4 {
+    font-size: 1rem;
+    font-weight: 600;
     color: var(--text-color);
+}
+
+.progress-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.progress-item {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    text-decoration: none;
+    color: var(--text-color);
+    transition: background-color 0.2s;
+}
+
+.progress-item:hover {
+    background-color: var(--background-color);
+}
+
+.subject-name {
+    flex: 1;
+    font-size: 0.9rem;
+    margin-right: 1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.progress-bar {
+    width: 150px;
+    height: 8px;
+    background-color: var(--background-color);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-fill {
+    height: 100%;
+    background-color: var(--primary-color);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    position: absolute;
+    right: -35px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.no-data {
+    text-align: center;
+    padding: 1.5rem;
+}
+
+.no-data p {
+    color: var(--text-secondary);
+    margin-bottom: 0.75rem;
+}
+
+.error-message {
+    text-align: center;
+    padding: 1.5rem;
+    color: var(--text-secondary);
+}
+
+.error-message p {
+    margin-bottom: 0.5rem;
 }
 
 
@@ -1083,4 +1164,33 @@ body {
 .correctness.incorrect {
     background-color: #f8d7da;
     color: #721c24;
+}
+
+.topics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.topic-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s;
+}
+
+.topic-card:hover {
+    transform: translateY(-2px);
+}
+
+.progress-circle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: conic-gradient( var(--primary-color) calc(var(--progress) * 1%), #eee calc(var(--progress) * 1%));
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }

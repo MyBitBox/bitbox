@@ -130,15 +130,15 @@
                             </div>
                             <div id="quizContent" class="quiz-content"></div>
                             <div class="coding-editor">
-                                <div id="codeEditor" style="height: 400px; border: 1px solid #ddd;"></div>
-                                <button id="submitCode" class="btn btn-primary" ${quizState.feedback.has(quiz.id) ? 'disabled' : ''}>
-                                    코드 제출
-                                </button>
-                            </div>
-                            <div class="quiz-navigation">
-                                <button id="nextQuizBtn" class="btn btn-primary" ${quizState.currentQuizIndex >= quizState.quizzes.length - 1 ? 'disabled' : ''}>
-                                    다음 문제
-                                </button>
+                                <div id="codeEditor" style="height: 400px; border: 1px solid #ddd; margin-bottom: 20px;"></div>
+                                <div class="button-group" style="display: flex; justify-content: space-between;">
+                                    <button id="submitCode" class="btn btn-primary" ${quizState.feedback.has(quiz.id) ? 'disabled' : ''}>
+                                        코드 제출
+                                    </button>
+                                    <button id="nextQuizBtn" class="btn btn-primary" ${quizState.currentQuizIndex >= quizState.quizzes.length - 1 ? 'disabled' : ''}>
+                                        다음 문제
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -158,13 +158,9 @@
                         <div id="quizFeedback" class="quiz-feedback"
                              style="display: ${quizState.feedback.has(quiz.id) ? 'block' : 'none'}">
                             <div class="answer-status">
-                                <div class="selected-answer">
-                                    <span class="label">제출한 코드:</span>
-                                    <pre class="answer"><code>${quizState.answers.get(quiz.id) || ''}</code></pre>
-                                </div>
                                 ${quizState.feedback.has(quiz.id) ? `
                                     <div class="correctness ${quizState.feedback.get(quiz.id).is_correct ? 'correct' : 'incorrect'}">
-                                        ${quizState.feedback.get(quiz.id).is_correct ? '테스트 통과! 🎉' : '테스트 실패 😢'}
+                                        ${quizState.feedback.get(quiz.id).is_correct ? '코드가 잘 작성되었습니다! 🎉' : '개선이 필요한 부분이 있습니다 💡'}
                                     </div>
                                 ` : ''}
                             </div>

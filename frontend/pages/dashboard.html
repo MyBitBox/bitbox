@@ -28,56 +28,13 @@
     <main class="main">
         <section class="dashboard-section">
             <div class="dashboard-header">
-                <h2>학습 현황</h2>
-                <p class="last-update">마지막 업데이트: <span id="lastUpdate">로딩 중...</span></p>
+                <h2>학습 진행률</h2>
             </div>
 
-            <div class="dashboard-grid">
-                <!-- 학습 개요 -->
-                <div class="dashboard-card summary-card">
-                    <h3>전체 학습 개요</h3>
-                    <div class="summary-stats">
-                        <div class="stat-item">
-                            <span class="stat-label">총 퀴즈 수</span>
-                            <span class="stat-value" id="totalQuizzes">-</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">정답률</span>
-                            <span class="stat-value" id="correctRate">-</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 현재 학습 중인 주제 -->
-                <div class="dashboard-card current-topics-card">
-                    <h3>학습 중인 주제</h3>
-                    <div class="topics-list" id="currentTopics">
+            <div class="dashboard-content">
+                <div class="dashboard-card">
+                    <div id="currentTopics">
                         <div class="loading">로딩 중...</div>
-                    </div>
-                </div>
-
-                <!-- 성과 그래프 -->
-                <div class="dashboard-card performance-card">
-                    <h3>학습 성과</h3>
-                    <div class="performance-stats">
-                        <div class="progress-bar-container">
-                            <div class="progress-label">
-                                <span>정답률</span>
-                                <span id="correctRate">-%</span>
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress-fill correct" id="correctRateBar" style="width: 0%"></div>
-                            </div>
-                        </div>
-                        <div class="progress-bar-container">
-                            <div class="progress-label">
-                                <span>오답률</span>
-                                <span id="incorrectRate">-%</span>
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress-fill incorrect" id="incorrectRateBar" style="width: 0%"></div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -91,7 +48,13 @@
     </footer>
 
     <script>
-        // 대시보드 데이터 로드
+        // 콘텐츠 타입별 페이지 매핑
+        const typeToPage = {
+            'quiz': 'quiz.html',
+            'codingtest': 'coding_test.html',
+            'interview': 'interview.html'
+        };
+
         async function loadDashboard() {
             try {
                 const response = await fetch(config.getApiUrl('/api/users/me/progress'), {
@@ -113,17 +76,6 @@
         }
 
         function updateDashboard(data) {
-            // 마지막 업데이트 시간
-            document.getElementById('lastUpdate').textContent = new Date(data.last_update).toLocaleString();
-
-            // 전체 학습 개요 업데이트
-            document.getElementById('totalQuizzes').textContent = `${data.total_quizzes}개`;
-            document.getElementById('correctRate').textContent = `${(data.correct_rate * 100).toFixed(1)}%`;
-            document.getElementById('correctRateBar').style.width = `${data.correct_rate * 100}%`;
-            document.getElementById('incorrectRate').textContent = `${(100 - data.correct_rate * 100).toFixed(1)}%`;
-            document.getElementById('incorrectRateBar').style.width = `${100 - data.correct_rate * 100}%`;
-
-            // 현재 학습 중인 주제 업데이트
             const topicsList = document.getElementById('currentTopics');
             if (data.subjects && data.subjects.length > 0) {
                 // content type별로 subjects 그룹화
@@ -144,27 +96,17 @@
                         <div class="content-type-header">
                             <h4>${group.contentType.name}</h4>
                         </div>
-                        ${group.subjects.map(subject => `
-                            <div class="topic-item">
-                                <div class="topic-info">
-                                    <div class="topic-header">
-                                        <h4>${subject.name}</h4>
-                                        <div class="topic-type">${group.contentType.name}</div>
-                                    </div>
-                                    <p>${(subject.progress_rate * 100).toFixed(1)}% 완료</p>
-                                </div>
-                                <div class="topic-progress">
+                        <div class="progress-list">
+                            ${group.subjects.map(subject => `
+                                <a href="/frontend/pages/${typeToPage[group.contentType.name.toLowerCase()]}?subject_id=${subject.id}" class="progress-item">
+                                    <span class="subject-name">${subject.name}</span>
                                     <div class="progress-bar">
                                         <div class="progress-fill" style="width: ${subject.progress_rate * 100}%"></div>
+                                        <span class="progress-text">${(subject.progress_rate * 100).toFixed(1)}%</span>
                                     </div>
-                                </div>
-                                <div class="topic-actions">
-                                    <a href="/frontend/pages/quiz.html?subject_id=${subject.id}" class="btn btn-outline btn-sm">
-                                        학습 계속하기
-                                    </a>
-                                </div>
-                            </div>
-                        `).join('')}
+                                </a>
+                            `).join('')}
+                        </div>
                     </div>
                 `).join('');
             } else {
@@ -180,18 +122,15 @@
         }
 
         function showError(message) {
-            const cards = document.querySelectorAll('.dashboard-card');
-            cards.forEach(card => {
-                card.innerHTML = `
-                    <div class="error-message">
-                        <p>${message}</p>
-                        <p>잠시 후 다시 시도해주세요.</p>
-                    </div>
-                `;
-            });
+            const topicsList = document.getElementById('currentTopics');
+            topicsList.innerHTML = `
+                <div class="error-message">
+                    <p>${message}</p>
+                    <p>잠시 후 다시 시도해주세요.</p>
+                </div>
+            `;
         }
 
-        // 페이지 로드 시 대시보드 정보 불러오기
         loadDashboard();
     </script>
 </body>

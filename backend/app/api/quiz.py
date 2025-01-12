@@ -79,24 +79,9 @@ def get_quiz(quiz_id: int, db: Session = Depends(get_db)):
     "/{quiz_id}/submit",
     response_model=QuizSubmitResponse,
     responses={
-        404: {
-            "description": "Quiz not found",
-            "content": {"application/json": {"example": {"detail": "Quiz not found"}}},
-        },
-        400: {
-            "description": "Invalid quiz submission",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Multiple choice quiz requires option_id"}
-                }
-            },
-        },
-        500: {
-            "description": "Internal server error",
-            "content": {
-                "application/json": {"example": {"detail": "Error generating feedback"}}
-            },
-        },
+        404: {"description": "Quiz not found"},
+        400: {"description": "Invalid quiz submission"},
+        500: {"description": "Internal server error"},
     },
 )
 async def submit_quiz(
@@ -107,15 +92,23 @@ async def submit_quiz(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    print(
+        f"[DEBUG] Received quiz submission - quiz_id: {quiz_id}, option_id: {option_id}, content: {content}"
+    )
+
     quiz = db.query(Quiz).filter(Quiz.id == quiz_id).first()
     if not quiz:
+        print(f"[DEBUG] Quiz not found - quiz_id: {quiz_id}")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Quiz not found"
         )
 
+    print(f"[DEBUG] Quiz type: {quiz.type}")
+
     # 퀴즈 타입에 따른 처리
     if quiz.type == QuizType.MULTIPLE_CHOICE:
         if option_id is None:
+            print(f"[DEBUG] Missing option_id for multiple choice quiz")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Multiple choice quiz requires option_id",
@@ -129,6 +122,7 @@ async def submit_quiz(
                 opt for opt in quiz.options if opt["id"] == quiz.correct_option_id
             )
         except StopIteration:
+            print(f"[DEBUG] Invalid option_id: {option_id}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Invalid option_id",
@@ -137,15 +131,19 @@ async def submit_quiz(
         correct_content = None if is_correct else correct_option["content"]
     else:
         if content is None:
+            print(f"[DEBUG] Missing content for {quiz.type.value} quiz")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"{quiz.type.value} quiz requires content",
             )
         selected_content = content
         correct_content = None
-        is_correct = False  # 코딩 테스트와 텍스트 답변은 일단 False로 설정
+        is_correct = None  # OpenAI 피드백에서 결정됨
 
     try:
+        print(
+            f"[DEBUG] Generating feedback - quiz_type: {quiz.type.value}, selected_content: {selected_content[:100]}..."
+        )
         # OpenAI를 통한 피드백 생성
         feedback = await generate_quiz_feedback(
             quiz_title=quiz.title,
@@ -155,6 +153,21 @@ async def submit_quiz(
             is_correct=is_correct,
             quiz_type=quiz.type.value,
         )
+        print(f"[DEBUG] Feedback generated successfully")
+
+        # 코딩 테스트와 텍스트 답변의 경우 OpenAI 피드백에서 정답 여부 추출
+        if quiz.type != QuizType.MULTIPLE_CHOICE:
+            # 피드백 첫 부분에서 정답 여부 확인
+            is_correct = any(
+                marker in feedback.lower()[:50]
+                for marker in [
+                    "정답입니다",
+                    "훌륭합니다",
+                    "좋은 답변입니다",
+                    "테스트 통과",
+                    "잘 작성하셨습니다",
+                ]
+            )
 
         # 기존 시도 횟수 확인 및 업데이트
         existing_answer = (
@@ -163,6 +176,9 @@ async def submit_quiz(
             .first()
         )
         if existing_answer:
+            print(
+                f"[DEBUG] Updating existing answer - retry_count: {existing_answer.retry_count + 1}"
+            )
             existing_answer.retry_count += 1
             existing_answer.is_correct = is_correct
             existing_answer.content = selected_content
@@ -171,6 +187,7 @@ async def submit_quiz(
             existing_answer.feedback_content = feedback
             db.add(existing_answer)
         else:
+            print(f"[DEBUG] Creating new answer")
             new_answer = Answer(
                 quiz_id=quiz_id,
                 user_id=current_user.id,
@@ -185,14 +202,16 @@ async def submit_quiz(
             db.add(new_answer)
 
         db.commit()
+        print(f"[DEBUG] Answer saved successfully")
 
         return QuizSubmitResponse(is_correct=is_correct, detail=feedback)
-
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error generating feedback",
-        )
+        print(f"[ERROR] Error in submit_quiz: {str(e)}")
+        print(f"[ERROR] Error type: {type(e)}")
+        import traceback
+
+        print(f"[ERROR] Traceback: {traceback.format_exc()}")
+        raise
 
 
 @router.put(
