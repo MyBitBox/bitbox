@@ -46,6 +46,20 @@
     </footer>
 
     <script>
+        // Monaco Editor 초기화
+        require.config({
+            paths: {
+                vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs'
+            }
+        });
+        require(['vs/editor/editor.main'], function() {
+            // Monaco Editor가 로드된 후 displayQuiz 함수가 호출될 수 있도록 이벤트를 발생시킵니다.
+            window.monacoLoaded = true;
+            if (window.pendingQuizDisplay) {
+                displayQuiz(window.pendingQuizDisplay);
+            }
+        });
+
         class QuizState {
             constructor() {
                 this.currentQuizIndex = 0;
@@ -106,19 +120,14 @@
         const quizState = new QuizState();
         let editor;
 
-        // Monaco Editor 설정
-        require.config({
-            paths: {
-                vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs'
-            }
-        });
-        require(['vs/editor/editor.main'], function() {
-            // 에디터는 퀴즈 표시 시 초기화됩니다
-        });
-
         function displayQuiz(quiz) {
-            const container = document.getElementById('quizContainer');
-            container.innerHTML = `
+            if (!window.monacoLoaded) {
+                window.pendingQuizDisplay = quiz;
+                return;
+            }
+
+            const quizContainer = document.getElementById('quizContainer');
+            quizContainer.innerHTML = `
                 <div class="quiz-layout">
                     <div class="quiz-main">
                         <div class="quiz-card">
