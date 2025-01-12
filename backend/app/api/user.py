@@ -41,7 +41,7 @@ def update_me(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
 
-    db.user.nickname = user_update.nickname
+    db_user.nickname = user_update.nickname
     db.commit()
     db.refresh(db_user)
     return db_user
@@ -57,7 +57,7 @@ async def get_user_progress(
     # 총 퀴즈 수와 정답률 계산
     total_quizzes = len(answers)
     correct_answers = len([a for a in answers if a.is_correct])
-    correct_rate = correct_answers / total_quizzes if total_quizzes > 0 else 0
+    correct_rate = float(correct_answers) / total_quizzes if total_quizzes > 0 else 0.0
 
     # 사용자가 참여한 모든 과목 ID 수집
     subject_ids = {answer.subject_id for answer in answers}
@@ -79,7 +79,9 @@ async def get_user_progress(
         subject_answers = [a for a in answers if a.subject_id == subject.id]
         subject_quizzes = db.query(Quiz).filter(Quiz.subject_id == subject.id).count()
         progress_rate = (
-            len(subject_answers) / subject_quizzes if subject_quizzes > 0 else 0
+            float(len(subject_answers)) / subject_quizzes
+            if subject_quizzes > 0
+            else 0.0
         )
 
         subject_progress.append(
