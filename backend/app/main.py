@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import quiz, user, subject, content_type
+from app.api import quiz, user, subject, content_type, auth
 from app.core.logging import setup_logging
 from app.core.database import init_db
 
@@ -28,6 +28,7 @@ app.add_middleware(
 init_db()
 
 # 라우터 등록
+app.include_router(auth.router)
 app.include_router(quiz.router)
 app.include_router(user.router)
 app.include_router(subject.router)
