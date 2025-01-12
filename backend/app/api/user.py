@@ -12,7 +12,7 @@ from app.models.quiz import Quiz
 from app.schemas.user import SubjectProgress, ContentTypeProgress
 
 
-router = APIRouter(prefix="/api/users", tags=["users"])
+router = APIRouter(prefix="/api/users", tags=["users"], strict_slashes=False)
 
 
 @router.get("/me", response_model=UserResponse)

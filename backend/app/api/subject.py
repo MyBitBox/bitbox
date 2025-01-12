@@ -5,7 +5,7 @@ from app.core.database import get_db
 from app.models.subject import Subject as SubjectModel
 from app.schemas.subject import SubjectResponse, SubjectCreate
 
-router = APIRouter(prefix="/api/subjects", tags=["subjects"])
+router = APIRouter(prefix="/api/subjects", tags=["subjects"], strict_slashes=False)
 
 
 @router.get("/", response_model=List[SubjectResponse])
