@@ -265,7 +265,7 @@
         // 퀴즈 데이터 로드
         async function loadQuizzes() {
             try {
-                const response = await fetch(config.getApiUrl(`/api/quizzes?subject_id=${subjectId}`), {
+                const response = await fetch(config.getApiUrl(`/api/quizzes/?subject_id=${subjectId}`), {
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('token')}`
                     }
