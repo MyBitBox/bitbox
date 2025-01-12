@@ -19,7 +19,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://v0-bitbox-yqzpj4kwtos-dvtxp4t9y-hks-projects-edd7fea3.vercel.app",  # 프로덕션 프론트엔드 주소
+        "https://v0-bitbox-yqzpj4kwtos.vercel.app/",  # 프로덕션 프론트엔드 주소
         "http://localhost:5500",  # 로컬 개발 환경 주소 (포트는 프론트엔드 설정에 따라 다를 수 있음)
         "http://127.0.0.1:5500",  # 로컬 개발 환경 주소
     ],
