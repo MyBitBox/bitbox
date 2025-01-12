@@ -16,4 +16,4 @@ class SubjectResponse(SubjectBase):
     id: int
 
     class Config:
-        from_attributes: True
+        from_attributes = True
