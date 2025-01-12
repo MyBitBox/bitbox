@@ -12,7 +12,7 @@ class QuizType(enum.Enum):
 
 
 class Quiz(Base):
-    __tablename__ = "quizzes_new"
+    __tablename__ = "quizzes"
 
     id = Column(Integer, primary_key=True, index=True)
     subject_id = Column(Integer, ForeignKey("subjects.id"), nullable=False)

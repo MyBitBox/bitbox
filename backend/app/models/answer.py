@@ -5,10 +5,10 @@ from app.core.database import Base
 
 
 class Answer(Base):
-    __tablename__ = "answers_new"
+    __tablename__ = "answers"
 
     id = Column(Integer, primary_key=True, index=True)
-    quiz_id = Column(Integer, ForeignKey("quizzes_new.id"), nullable=False)
+    quiz_id = Column(Integer, ForeignKey("quizzes.id"), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     option_id = Column(Integer, nullable=True)  # 객관식일 때만 사용
     is_correct = Column(Boolean, nullable=False)
