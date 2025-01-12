@@ -1,12 +1,7 @@
 const config = {
-        API_BASE_URL: 'http://localhost:8000',
-        getApiUrl: function(endpoint) {
-                // 쿼리 파라미터가 있는지 확인
-                const [path, query] = endpoint.split('?');
-                // 기본 경로에만 trailing slash 추가
-                const normalizedPath = path.endsWith('/') ? path : `${path}/`;
-                // 쿼리 파라미터가 있으면 다시 붙임
-                return `${this.API_BASE_URL}${normalizedPath}${query ? `?${query}` : ''}`;
+    API_BASE_URL: 'http://localhost:8000',
+    getApiUrl: function(endpoint) {
+        return `${this.API_BASE_URL}${endpoint}`;
     }
 };
 
