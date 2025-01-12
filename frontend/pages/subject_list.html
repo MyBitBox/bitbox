@@ -74,7 +74,7 @@
         }
 
         // API 호출 및 카드 생성
-        fetch(config.getApiUrl(`/api/subjects?content_type_id=${contentTypeId}`), {
+        fetch(config.getApiUrl(`/api/subjects/?content_type_id=${contentTypeId}`), {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
