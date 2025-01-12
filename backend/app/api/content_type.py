@@ -53,7 +53,15 @@ def create_content_type(content_type: ContentTypeCreate, db: Session = Depends(g
             "content": {
                 "application/json": {"example": {"detail": "Content type not found"}}
             },
-        }
+        },
+        409: {
+            "description": "Content type name already exists",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Content type name already exists"}
+                }
+            },
+        },
     },
 )
 def update_content_type(
@@ -67,6 +75,18 @@ def update_content_type(
     if not db_content_type:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Content type not found"
+        )
+
+    existing_content_type = (
+        db.query(ContentType)
+        .filter(ContentType.name == content_type.name)
+        .filter(ContentType.id != content_type_id)
+        .first()
+    )
+    if existing_content_type:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Content type name already exists",
         )
 
     db_content_type.name = content_type.name
