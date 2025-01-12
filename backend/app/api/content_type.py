@@ -5,9 +5,7 @@ from app.core.database import get_db
 from app.schemas.content_type import ContentTypeResponse, ContentTypeCreate
 from app.models.content_type import ContentType
 
-router = APIRouter(
-    prefix="/api/content_types", tags=["content_type"], strict_slashes=False
-)
+router = APIRouter(prefix="/api/content_types", tags=["content_type"])
 
 
 @router.get("/", response_model=List[ContentTypeResponse])

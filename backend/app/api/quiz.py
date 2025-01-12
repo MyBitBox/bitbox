@@ -9,7 +9,7 @@ from app.models.quiz import Quiz, QuizType
 from app.models.answer import Answer
 from app.models.user import User
 
-router = APIRouter(prefix="/api/quizzes", tags=["quizzes"], strict_slashes=False)
+router = APIRouter(prefix="/api/quizzes", tags=["quizzes"])
 
 
 @router.get("/", response_model=List[QuizResponse])

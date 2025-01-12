@@ -5,7 +5,7 @@ from app.models.user import User
 from app.schemas.user import UserCreate, UserLogin, Token
 from app.core.utils import hash_password, create_access_token, verify_password
 
-router = APIRouter(prefix="/api/auth", tags=["auth"], strict_slashes=False)
+router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
 @router.post(
