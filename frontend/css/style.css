@@ -1041,3 +1041,46 @@ body {
     font-weight: 600;
     color: var(--text-secondary);
 }
+
+.answer-status {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 20px;
+    border: 1px solid #e9ecef;
+}
+
+.selected-answer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.selected-answer .label {
+    font-weight: 600;
+    color: #495057;
+    min-width: 100px;
+}
+
+.selected-answer .answer {
+    color: #212529;
+    flex: 1;
+}
+
+.correctness {
+    font-weight: 600;
+    padding: 8px 12px;
+    border-radius: 6px;
+    text-align: center;
+}
+
+.correctness.correct {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.correctness.incorrect {
+    background-color: #f8d7da;
+    color: #721c24;
+}

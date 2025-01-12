@@ -39,6 +39,17 @@
                             <p>AI가 피드백을 생성하고 있습니다...</p>
                         </div>
                         <div id="quizFeedback" class="quiz-feedback" style="display: none;">
+                            <div class="answer-status">
+                                <div class="selected-answer">
+                                    <span class="label">선택한 답변:</span>
+                                    <span class="answer">${quiz.options?.find(opt => opt.id === quizState.answers.get(quiz.id))?.content || ''}</span>
+                                </div>
+                                ${quizState.feedback.has(quiz.id) ? `
+                                <div class="correctness ${quizState.feedback.get(quiz.id).is_correct ? 'correct' : 'incorrect'}">
+                                    ${quizState.feedback.get(quiz.id).is_correct ? '정답입니다! 🎉' : '틀렸습니다 😢'}
+                                </div>
+                                ` : ''}
+                            </div>
                             <h3>AI 피드백</h3>
                             <div id="feedbackContent"></div>
                         </div>
@@ -55,10 +66,64 @@
     </footer>
 
     <script>
+        class QuizState {
+            constructor() {
+                this.currentQuizIndex = 0;
+                this.quizzes = [];
+                this.answers = new Map(); // 사용자의 답변을 저장
+                this.feedback = new Map(); // AI 피드백을 저장
+
+                // 로컬 스토리지에서 상태 복원
+                this.restoreState();
+            }
+
+            // 상태 저장
+            saveState() {
+                const state = {
+                    currentQuizIndex: this.currentQuizIndex,
+                    answers: Array.from(this.answers.entries()),
+                    feedback: Array.from(this.feedback.entries())
+                };
+                localStorage.setItem(`quiz_state_${subjectId}`, JSON.stringify(state));
+            }
+
+            // 상태 복원
+            restoreState() {
+                const savedState = localStorage.getItem(`quiz_state_${subjectId}`);
+                if (savedState) {
+                    const state = JSON.parse(savedState);
+                    this.currentQuizIndex = state.currentQuizIndex;
+                    this.answers = new Map(state.answers);
+                    this.feedback = new Map(state.feedback);
+                }
+            }
+
+            // 답변 저장
+            setAnswer(quizId, optionId) {
+                this.answers.set(quizId, optionId);
+                this.saveState();
+            }
+
+            // 피드백 저장
+            setFeedback(quizId, feedback) {
+                this.feedback.set(quizId, feedback);
+                this.saveState();
+            }
+
+            // 다음 문제로 이동
+            nextQuiz() {
+                if (this.currentQuizIndex < this.quizzes.length - 1) {
+                    this.currentQuizIndex++;
+                    this.saveState();
+                    return true;
+                }
+                return false;
+            }
+        }
+
         const urlParams = new URLSearchParams(window.location.search);
         const subjectId = urlParams.get('subject_id');
-        let currentQuizIndex = 0;
-        let quizzes = [];
+        const quizState = new QuizState();
 
         function displayQuiz(quiz) {
             const container = document.getElementById('quizContainer');
@@ -68,7 +133,7 @@
                         <div class="quiz-card">
                             <div class="quiz-header">
                                 <div class="quiz-progress">
-                                    ${currentQuizIndex + 1} / ${quizzes.length}
+                                    ${quizState.currentQuizIndex + 1} / ${quizState.quizzes.length}
                                 </div>
                                 <h2 class="quiz-title">${quiz.title}</h2>
                             </div>
@@ -78,7 +143,8 @@
                             ${quiz.type === 'MULTIPLE_CHOICE' ? `
                                 <div class="quiz-options">
                                     ${quiz.options.map((option, index) => `
-                                        <button class="quiz-option" data-option-id="${option.id}">
+                                        <button class="quiz-option ${quizState.answers.has(quiz.id) ? 'disabled' : ''}" 
+                                                data-option-id="${option.id}">
                                             <span class="option-label">${String.fromCharCode(65 + index)}.</span>
                                             <pre class="option-content">${option.content}</pre>
                                         </button>
@@ -96,7 +162,7 @@
                                 </div>
                             ` : ''}
                             <div class="quiz-navigation">
-                                <button id="nextQuizBtn" class="btn btn-primary">
+                                <button id="nextQuizBtn" class="btn btn-primary" ${quizState.currentQuizIndex >= quizState.quizzes.length - 1 ? 'disabled' : ''}>
                                     다음 문제
                                 </button>
                             </div>
@@ -107,14 +173,27 @@
                             <div class="spinner"></div>
                             <p>AI가 피드백을 생성하고 있습니다...</p>
                         </div>
-                        <div id="feedbackPlaceholder" class="quiz-feedback-placeholder">
+                        <div id="feedbackPlaceholder" class="quiz-feedback-placeholder" 
+                             style="display: ${quizState.feedback.has(quiz.id) ? 'none' : 'flex'}">
                             <div class="icon">🤔</div>
                             <div class="text">
                                 <p>문제를 읽고 답을 선택해주세요.</p>
                                 <p>AI가 상세한 피드백을 제공할 예정입니다.</p>
                             </div>
                         </div>
-                        <div id="quizFeedback" class="quiz-feedback">
+                        <div id="quizFeedback" class="quiz-feedback" 
+                             style="display: ${quizState.feedback.has(quiz.id) ? 'block' : 'none'}">
+                            <div class="answer-status">
+                                <div class="selected-answer">
+                                    <span class="label">선택한 답변:</span>
+                                    <span class="answer">${quiz.options?.find(opt => opt.id === quizState.answers.get(quiz.id))?.content || ''}</span>
+                                </div>
+                                ${quizState.feedback.has(quiz.id) ? `
+                                    <div class="correctness ${quizState.feedback.get(quiz.id).is_correct ? 'correct' : 'incorrect'}">
+                                        ${quizState.feedback.get(quiz.id).is_correct ? '정답입니다! 🎉' : '틀렸습니다 😢'}
+                                    </div>
+                                ` : ''}
+                            </div>
                             <h3>AI 피드백</h3>
                             <div id="feedbackContent"></div>
                         </div>
@@ -122,7 +201,7 @@
                 </div>
             `;
 
-            // 문제 내용만 Toast UI Viewer로 표시
+            // 문제 내용 표시
             new toastui.Editor.factory({
                 el: document.getElementById('quizContent'),
                 initialValue: quiz.content,
@@ -130,21 +209,33 @@
                 height: 'auto'
             });
 
+            // 저장된 피드백이 있으면 표시
+            if (quizState.feedback.has(quiz.id)) {
+                const feedbackContent = document.getElementById('feedbackContent');
+                new toastui.Editor.factory({
+                    el: feedbackContent,
+                    initialValue: quizState.feedback.get(quiz.id).detail,
+                    viewer: true,
+                    height: 'auto'
+                });
+            }
+
             // 옵션 클릭 이벤트 추가
             document.querySelectorAll('.quiz-option').forEach(button => {
-                button.addEventListener('click', async function() {
+                button.addEventListener('click', async function(e) {
+                    e.preventDefault();
                     if (this.classList.contains('disabled')) return;
 
-                    const optionId = this.dataset.optionId;
-                    await submitAnswer(quiz.id, parseInt(optionId), this);
+                    const optionId = parseInt(this.dataset.optionId);
+                    await handleAnswerSubmission(quiz.id, optionId, this);
                 });
             });
 
             // 다음 문제 버튼 이벤트
-            document.getElementById('nextQuizBtn').addEventListener('click', () => {
-                if (currentQuizIndex < quizzes.length - 1) {
-                    currentQuizIndex++;
-                    displayQuiz(quizzes[currentQuizIndex]);
+            document.getElementById('nextQuizBtn').addEventListener('click', (e) => {
+                e.preventDefault();
+                if (quizState.nextQuiz()) {
+                    displayQuiz(quizState.quizzes[quizState.currentQuizIndex]);
                 } else {
                     alert('모든 문제를 완료했습니다!');
                     window.location.href = 'subject_list.html';
@@ -152,39 +243,44 @@
             });
         }
 
-        async function submitAnswer(quizId, optionId, selectedButton) {
+        async function handleAnswerSubmission(quizId, optionId, selectedButton) {
             const loadingIndicator = document.getElementById('loadingIndicator');
             const feedbackDiv = document.getElementById('quizFeedback');
             const feedbackContent = document.getElementById('feedbackContent');
             const placeholder = document.getElementById('feedbackPlaceholder');
             
-            // 로딩 표시 시작
-            loadingIndicator.style.display = 'flex';
-            feedbackDiv.style.display = 'none';
-            placeholder.style.display = 'none';
-
             try {
+                // 버튼 상태 업데이트
+                document.querySelectorAll('.quiz-option').forEach(btn => {
+                    btn.classList.add('disabled');
+                });
+
+                // 로딩 표시
+                loadingIndicator.style.display = 'flex';
+                feedbackDiv.style.display = 'none';
+                placeholder.style.display = 'none';
+
+                // 답변 저장
+                quizState.setAnswer(quizId, optionId);
+
+                // API 호출
                 const response = await fetch(`http://localhost:8000/api/quizzes/${quizId}/submit`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${localStorage.getItem('token')}`
                     },
-                    body: JSON.stringify({
-                        option_id: optionId
-                    })
+                    body: JSON.stringify({ option_id: optionId })
                 });
 
                 const data = await response.json();
                 
-                // 모든 옵션 버튼 비활성화
-                document.querySelectorAll('.quiz-option').forEach(btn => {
-                    btn.classList.add('disabled');
-                });
+                // 피드백 저장
+                quizState.setFeedback(quizId, data);
 
-                // 선택한 옵션 표시
+                // UI 업데이트
                 selectedButton.classList.add(data.is_correct ? 'correct' : 'incorrect');
-
+                
                 // 피드백 표시
                 new toastui.Editor.factory({
                     el: feedbackContent,
@@ -192,9 +288,8 @@
                     viewer: true,
                     height: 'auto'
                 });
-                feedbackDiv.className = `quiz-feedback ${data.is_correct ? 'correct' : 'incorrect'}`;
                 
-                // 로딩 표시 제거 및 피드백 표시
+                feedbackDiv.className = `quiz-feedback ${data.is_correct ? 'correct' : 'incorrect'}`;
                 loadingIndicator.style.display = 'none';
                 feedbackDiv.style.display = 'block';
 
@@ -206,17 +301,20 @@
             }
         }
 
-        // 퀴즈 데이터 로드
-        fetch(`http://localhost:8000/api/quizzes?subject_id=${subjectId}`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-        })
-            .then(response => response.json())
-            .then(data => {
-                quizzes = data;
-                if (quizzes.length > 0) {
-                    displayQuiz(quizzes[0]);
+        // 퀴즈 데이터 초기 로드
+        async function initializeQuizzes() {
+            try {
+                const response = await fetch(`http://localhost:8000/api/quizzes?subject_id=${subjectId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                
+                const data = await response.json();
+                quizState.quizzes = data;
+                
+                if (quizState.quizzes.length > 0) {
+                    displayQuiz(quizState.quizzes[quizState.currentQuizIndex]);
                 } else {
                     document.getElementById('quizContainer').innerHTML = `
                         <div class="error-message">
@@ -225,8 +323,7 @@
                         </div>
                     `;
                 }
-            })
-            .catch(error => {
+            } catch (error) {
                 console.error('Error fetching quizzes:', error);
                 document.getElementById('quizContainer').innerHTML = `
                     <div class="error-message">
@@ -234,7 +331,11 @@
                         <p>잠시 후 다시 시도해주세요.</p>
                     </div>
                 `;
-            });
+            }
+        }
+
+        // 초기화
+        initializeQuizzes();
     </script>
 </body>
 
