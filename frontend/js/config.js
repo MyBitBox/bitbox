@@ -8,5 +8,5 @@ const config = {
 // 개발/운영 환경에 따라 BASE_URL을 동적으로 설정
 const hostname = window.location.hostname;
 if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
-    config.API_BASE_URL = 'https://api.yourservice.com'; // 프로덕션 URL로 변경 필요
+    config.API_BASE_URL = 'https://your-railway-app.railway.app'; // 프로덕션 URL로 변경 필요
 }
